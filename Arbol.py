@@ -2,12 +2,12 @@ from typing import Generic, TypeVar
 
 T = TypeVar('T')
 
-class ArbolN(Generic[T]):
+class Arbol(Generic[T]):
     #ESTRUCTURA
     # Estructura con recursión directa múltiple
     def __init__(self, dato: T):
         self._dato: T = dato
-        self._subarboles: list[ArbolN[T]] = []
+        self._subarboles: list[Arbol[T]] = []
     
     # Decidimos mantener los atributos privados para convertirlos en propiedades
     @property
@@ -19,11 +19,11 @@ class ArbolN(Generic[T]):
         self._dato = valor
 
     @property
-    def subarboles(self) -> "list[ArbolN[T]]":
+    def subarboles(self) -> "list[Arbol[T]]":
         return self._subarboles
     
     @subarboles.setter
-    def subarboles(self, subarboles: "list[ArbolN[T]]"):
+    def subarboles(self, subarboles: "list[Arbol[T]]"):
         self._subarboles = subarboles
 
     #METODOS ESPECIALES
@@ -34,11 +34,11 @@ class ArbolN(Generic[T]):
         else:
             return 1 + sum([len(subarbol) for subarbol in self.subarboles])
 
-    def __eq__(self, otro: "ArbolN[T]") -> bool:
-        return isinstance(otro, ArbolN) and self.dato == otro.dato and self.subarboles == otro.subarboles
+    def __eq__(self, otro: "Arbol[T]") -> bool:
+        return isinstance(otro, Arbol) and self.dato == otro.dato and self.subarboles == otro.subarboles
 
     def __str__(self):
-        def mostrar(t: ArbolN[T], nivel: int):
+        def mostrar(t: Arbol[T], nivel: int):
             tab = '.' * 4
             indent = tab * nivel
             out = indent + str(t.dato) + '\n'
@@ -50,7 +50,7 @@ class ArbolN(Generic[T]):
     #METODOS
 
     # Extender árboles con nuevos descendientes
-    def insertar_subarbol(self, subarbol: "ArbolN[T]"):
+    def insertar_subarbol(self, subarbol: "Arbol[T]"):
         self.subarboles.append(subarbol)
 
     # Presenta si un nodo no tiene subárboles
@@ -58,7 +58,7 @@ class ArbolN(Generic[T]):
         return self.subarboles == []
     
     def altura(self) -> int:
-        def altura_n(bosque: list[ArbolN[T]]) -> int:
+        def altura_n(bosque: list[Arbol[T]]) -> int:
             if not bosque:
                 return 0
             else:
@@ -66,17 +66,17 @@ class ArbolN(Generic[T]):
         return 1 + altura_n(self.subarboles)
     
     def preorder(self) -> list[T]:
-        def preorder_n(bosque: list[ArbolN[T]]) -> list[T]:
+        def preorder_n(bosque: list[Arbol[T]]) -> list[T]:
             return [] if not bosque else bosque[0].preorder() + preorder_n(bosque[1:])
         return [self.dato] + preorder_n(self.subarboles)
 
     def posorder(self) -> list[T]:
-        def posorder_n(bosque: list[ArbolN[T]]) -> list[T]:
+        def posorder_n(bosque: list[Arbol[T]]) -> list[T]:
             return [] if not bosque else  posorder_n(bosque[1:]) + bosque[0].posorder()
         return  posorder_n(self.subarboles) + [self.dato] 
 
     def bfs(self) -> list[T]:
-        def recorrido(queue: list[ArbolN], camino: list[T]) -> list[T]:
+        def recorrido(queue: list[Arbol], camino: list[T]) -> list[T]:
             if not queue:
                 return camino
             nodo_actual = queue.pop(0)
@@ -98,13 +98,13 @@ class ArbolN(Generic[T]):
                 return True
         return False
     
-    def copy(self) -> "ArbolN[T]":
+    def copy(self) -> "Arbol[T]":
         pass
         
-    def sin_hojas(self) -> "ArbolN[T]":
+    def sin_hojas(self) -> "Arbol[T]":
         if self.es_hoja():
             return None
-        nuevo = ArbolN(self.dato)
+        nuevo = Arbol(self.dato)
         for subarbol in self.subarboles:
             a = subarbol.sin_hojas()
             if a is None:
@@ -132,7 +132,7 @@ class ArbolN(Generic[T]):
     
     # # Version 2 -> Saco el dato buscado al final
     # def antecesores_fin(self, dato: T) -> list[T]:
-    #     def antecesor_interna(t: ArbolN[T]) -> list[T]:
+    #     def antecesor_interna(t: Arbol[T]) -> list[T]:
     #         if dato == t.dato:
     #             return [dato]
     #         elif t.es_hoja():
@@ -172,7 +172,7 @@ class ArbolN(Generic[T]):
 
     # Version 4 -> Top-down, vamos llenando la lista y borrando a medida que encontremo y no encontremos
     def antecesores(self, dato: T) -> list[T]:
-        def antecesor_interna(t: ArbolN[T], antecesores: list[T]):
+        def antecesor_interna(t: Arbol[T], antecesores: list[T]):
             if dato == t.dato:
                 return antecesores
             elif t.es_hoja():
