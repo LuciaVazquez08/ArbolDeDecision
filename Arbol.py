@@ -88,7 +88,7 @@ class Arbol(Generic[T]):
         return recorrido([self], [])
 
     def nivel(self, dato: T) -> int:
-        return len(self.antecesores(dato))
+        return len(self.antecesores(dato)) + 1
 
     def pertenece(self, x: T) -> bool:
         if self.dato == x:
@@ -144,10 +144,19 @@ class Arbol(Generic[T]):
             if i >= len(self.subarboles):
                 raise Exception('No existe la dirección ingresada.')
             return self.subarboles[i].recorrido_guiado(direcciones)
+
+    def podar(self, dato: T) -> "Arbol[T]":
+        if self.dato == dato:
+            return Arbol(self.dato)
+        else:
+            nuevo = Arbol(self.dato)
+            for subarbol in self.subarboles:
+                if subarbol.dato != dato:
+                    nuevo.insertar_subarbol(subarbol.podar(dato))
+            return nuevo
         
-    # eliminar_nodo()
-    # podar()
-    # es_binario()
+    def eliminar_nodo(self, dato: T):
+        pass
         
 
 def main():
@@ -173,16 +182,17 @@ def main():
   
     print(f'Altura: {t.altura()}')
     print(f'Nodos: {len(t)}')
+    print(f'Nivel 6: {t.nivel(9)}')
 
     print(f'DFS Preorder: {t.preorder()}')
     print(f'DFS Postorder: {t.postorder()}')
     print(f'BFS: {t.bfs()}')
 
-    print(f'Antecesores: {t.antecesores(9)}')
+    print(f'Antecesores: {t.antecesores(6)}')
 
     print(f'Recorrido guiado: {t.recorrido_guiado([2,0,0])}')
 
-    t2 = t.copy()
+    t2 = t.podar(9)
     print(t2)
 
 if __name__ == '__main__':
