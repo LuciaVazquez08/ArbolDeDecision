@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Tuple
 import pandas as pd
 import numpy as np
 import Arbol, Entropia
@@ -6,7 +6,7 @@ import Arbol, Entropia
 class ArbolID3(Arbol):
     
     def __init__(self, valor = None, es_hoja: bool = False) -> None:
-        super().__init__()
+        super().__init__(valor)
         self.valor = valor
         self.es_hoja = es_hoja
         self.hijos = {}
@@ -15,7 +15,7 @@ class ArbolID3(Arbol):
     # X: dataset convertido en arrays sin la primer columna de atributos
     # y: columna con las clases
     def id3(cls, X: np.ndarray, y: np.ndarray, atributos: List[int],
-            profundidad_max: None, minimas_obs_n: int = 0, ganancia_minima: int= 0, profundidad_actual: int = 0
+            profundidad_max: Optional[int] = None, minimas_obs_n: int = 0, ganancia_minima: float = 0, profundidad_actual: int = 0
             ) -> "ArbolID3":
         
         # Criterio de parada: Nodo puro (todos los elementos del nodo perteneces a misma clase)
@@ -34,11 +34,9 @@ class ArbolID3(Arbol):
         
         # Criterio de parada: Sin atributos para dividir
         if not atributos:
-            # Devolver la clase mayoritaria
             clase_mayoritaria = cls.clase_mayoritaria(y)
             return ArbolID3(clase_mayoritaria, es_hoja=True)
         
-            
         # Seleccionamos el mejor atributo en base a entropía y ganancia de informacion
         ganancias = [Entropia.ganancia_informacion_atributo(X, y, atributo) for atributo in atributos]
         mejor_atributo = atributos[np.argmax(ganancias)]
@@ -55,15 +53,15 @@ class ArbolID3(Arbol):
         atributos_restantes.remove(mejor_atributo)
         
         # Creamos nodos para cada valor del mejor atributo
-        for valor in np.unique(X[:, mejor_atributo]): # del mejor atributo agarra todos los valores unicos
+        for valor in np.unique(X[:, mejor_atributo]):
             indices = np.where(X[:, mejor_atributo] == valor)[0]
             
             sub_X = X[indices]
             sub_y = y[indices]
             
             # Recursión para construir el árbol
-            subarbol = cls.id3(sub_X, sub_y, atributos_restantes)
-            arbol.insertar_subarbol(subarbol)
+            subarbol = cls.id3(sub_X, sub_y, atributos_restantes, profundidad_max, minimas_obs_n, ganancia_minima, profundidad_actual + 1)
+            arbol.hijos[valor] = subarbol
             
         return arbol
     
@@ -73,7 +71,7 @@ class ArbolID3(Arbol):
         return clases[np.argmax(conteo)]
 
     @staticmethod      
-    def csv_a_numpy(ruta_csv: str) -> tuple:
+    def csv_a_numpy(ruta_csv: str) -> Tuple[np.ndarray, np.ndarray, List[int]]:
         df = pd.read_csv(ruta_csv)
         
         X = df.iloc[1:, :-1].values # todas las columnas menos la ultima
