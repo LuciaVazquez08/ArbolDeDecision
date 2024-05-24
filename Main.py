@@ -38,4 +38,8 @@ if __name__ == '__main__':
     # print(t.pertenece(10))
 
     # print(f'recorrido_guiado [2,0,0]: {t2.recorrido_guiado([2,0,0])}')
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 94e8d0dae1836c16a555d214c6ec724cf7225617
