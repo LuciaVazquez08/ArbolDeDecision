@@ -15,7 +15,7 @@ class ArbolID3(Arbol):
     # X: dataset convertido en arrays sin la primer columna de atributos
     # y: columna con las clases
     def id3(cls, X: np.ndarray, y: np.ndarray, atributos: List[int],
-            profundidad_max: Optional[int] = None, minimas_obs_n: int = 0, ganancia_minima: float = 0, profundidad_actual: int = 0
+            profundidad_max = None, minimas_obs_n: int = 0, minimas_obs_h: int = 0, ganancia_minima: float = 0, profundidad_actual: int = 0
             ) -> "ArbolID3":
         
         # Criterio de parada: Nodo puro (todos los elementos del nodo perteneces a misma clase)
@@ -27,7 +27,7 @@ class ArbolID3(Arbol):
             clase_mayoritaria= cls.clase_mayoritaria(y)
             return ArbolID3(clase_mayoritaria, es_hoja = True)
         
-        # Criterio de parada: Mininimas observaciones por nodo(Que diferencia hay con minimas observaciones por hoja???)
+        # Criterio de parada: Mininimas observaciones por nodo
         if minimas_obs_n > len(y):
             clase_mayoritaria= cls.clase_mayoritaria(y)
             return ArbolID3(clase_mayoritaria, es_hoja = True)
@@ -58,11 +58,16 @@ class ArbolID3(Arbol):
             
             sub_X = X[indices]
             sub_y = y[indices]
+
+            # Criterio de parada: Mínimas observaciones por hoja
+            if len(sub_y) < minimas_obs_h:
+                clase_mayoritaria = cls.clase_mayoritaria(sub_y)
+                subarbol = ArbolID3(valor=clase_mayoritaria, es_hoja=True)
+            else:
+                # Recursión para construir el árbol
+                subarbol = cls.id3(sub_X, sub_y, atributos_restantes, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
             
-            # Recursión para construir el árbol
-            subarbol = cls.id3(sub_X, sub_y, atributos_restantes, profundidad_max, minimas_obs_n, ganancia_minima, profundidad_actual + 1)
             arbol.hijos[valor] = subarbol
-            
         return arbol
     
     @staticmethod
