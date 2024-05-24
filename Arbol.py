@@ -70,10 +70,10 @@ class Arbol(Generic[T]):
             return [] if not bosque else bosque[0].preorder() + preorder_n(bosque[1:])
         return [self.dato] + preorder_n(self.subarboles)
 
-    def posorder(self) -> list[T]:
-        def posorder_n(bosque: list[Arbol[T]]) -> list[T]:
-            return [] if not bosque else  posorder_n(bosque[1:]) + bosque[0].posorder()
-        return  posorder_n(self.subarboles) + [self.dato] 
+    def postorder(self) -> list[T]:
+        def postorder_n(bosque: list[Arbol[T]]) -> list[T]:
+            return [] if not bosque else bosque[0].postorder() + postorder_n(bosque[1:])
+        return  postorder_n(self.subarboles) + [self.dato] 
 
     def bfs(self) -> list[T]:
         def recorrido(queue: list[Arbol], camino: list[T]) -> list[T]:
@@ -88,7 +88,7 @@ class Arbol(Generic[T]):
         return recorrido([self], [])
 
     def nivel(self, dato: T) -> int:
-        return len(self.antecesores(dato))
+        return len(self.antecesores(dato)) + 1
 
     def pertenece(self, x: T) -> bool:
         if self.dato == x:
@@ -99,7 +99,11 @@ class Arbol(Generic[T]):
         return False
     
     def copy(self) -> "Arbol[T]":
-        pass
+        nuevo = Arbol(self.dato)
+        for subarbol in self.subarboles:
+            nuevo_subarbol = subarbol.copy()
+            nuevo.insertar_subarbol(nuevo_subarbol)
+        return nuevo
         
     def sin_hojas(self) -> "Arbol[T]":
         if self.es_hoja():
@@ -111,64 +115,6 @@ class Arbol(Generic[T]):
                 continue
             nuevo.insertar_subarbol(a)
         return nuevo
-    
-    # # Version 1 -> Saco el dato buscado en el predecesor directo
-    # def antecesores_pred(self, dato: T) -> list[T]:
-    #     if dato == self.dato:
-    #         return [dato]
-    #     elif self.es_hoja():
-    #         return []
-    #     else:
-    #         i = 0
-    #         resultado = []
-    #         while i < len(self.subarboles) and not resultado:
-    #             resultado = self.subarboles[i].antecesores_pred(dato)
-    #             i += 1
-    #         if resultado:
-    #             if resultado [0] == dato:
-    #                 resultado.pop()
-    #             resultado.insert(0, self.dato)
-    #         return resultado
-    
-    # # Version 2 -> Saco el dato buscado al final
-    # def antecesores_fin(self, dato: T) -> list[T]:
-    #     def antecesor_interna(t: Arbol[T]) -> list[T]:
-    #         if dato == t.dato:
-    #             return [dato]
-    #         elif t.es_hoja():
-    #             return []
-    #         else:
-    #             i = 0
-    #             resultado = []
-    #             while i < len(t.subarboles) and not resultado:
-    #                 resultado = antecesor_interna(t.subarboles[i])
-    #                 i += 1
-    #             if resultado:
-    #                 resultado.insert(0, t.dato)
-    #             return resultado
-    #     resultado = antecesor_interna(self)
-    #     if resultado:
-    #         resultado.pop()
-    #     return resultado
-
-    # # Version 3 -> Look ahead (con esta metodologia nunca llegamos al nodo buscado, solo en el caso de que sea la raíz)
-    # def antecesores_look(self, dato: T) -> list[T]:
-    #     if dato == self.dato or self.es_hoja():
-    #         return []
-    #     else:
-    #         i = 0
-    #         resultado = []
-    #         encontrado = False
-    #         while i < len(self.subarboles) and not encontrado:
-    #             if self.subarboles[i].dato == dato:
-    #                 encontrado = True
-    #             else:
-    #                 resultado = self.subarboles[i].antecesores_look(dato)
-    #                 encontrado = bool(resultado) # lo encontre
-    #             i += 1
-    #         if encontrado:
-    #             resultado.insert(0, self.dato)
-    #         return resultado
 
     # Version 4 -> Top-down, vamos llenando la lista y borrando a medida que encontremo y no encontremos
     def antecesores(self, dato: T) -> list[T]:
@@ -185,7 +131,6 @@ class Arbol(Generic[T]):
                     resultado = antecesor_interna(t.subarboles[i], antecesores.copy())
                     i += 1
                 return resultado
-        
         if self.pertenece(dato):
             return antecesor_interna(self,[])
         else:
@@ -199,3 +144,17 @@ class Arbol(Generic[T]):
             if i >= len(self.subarboles):
                 raise Exception('No existe la dirección ingresada.')
             return self.subarboles[i].recorrido_guiado(direcciones)
+
+    def podar(self, dato: T) -> "Arbol[T]":
+        if self.dato == dato:
+            return Arbol(self.dato)
+        else:
+            nuevo = Arbol(self.dato)
+            for subarbol in self.subarboles:
+                if subarbol.dato != dato:
+                    nuevo.insertar_subarbol(subarbol.podar(dato))
+            return nuevo
+        
+    def eliminar_nodo(self, dato: T):
+        pass
+        
