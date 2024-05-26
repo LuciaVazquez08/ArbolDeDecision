@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 import pandas as pd
 import numpy as np
 import Arbol, Entropia
@@ -22,7 +22,7 @@ class ArbolID3(Arbol):
         if len(np.unique(y)) == 1:
             return ArbolID3(y[0], es_hoja = True)
         
-        # Criterio de parada: Maxima profundidad (Agrego un is not none o pongo una prfundidad maxima????)
+        # Criterio de parada: Maxima profundidad
         if profundidad_max is not None and profundidad_max <= profundidad_actual:
             clase_mayoritaria= cls.clase_mayoritaria(y)
             return ArbolID3(clase_mayoritaria, es_hoja = True)
