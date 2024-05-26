@@ -1,41 +1,45 @@
-from Arbol import Arbol
+import numpy as np
+import pandas as pd
+from ArbolID3 import ArbolID3
+from DecisionTreeClassifier import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+
+def main():
+
+    # Cargamos el dataset
+    df = pd.read_csv("C:/Users/naiar/Downloads/IRIS.csv")
+
+    # Vemos el balance del dataset (en el caso de estar desbalanceado tendríamos que manejarlo)
+    balance = df['species'].value_counts()
+
+    # Contamos la cantidad de datos faltantes de cada atributo
+    null_counts = df.isnull().sum() 
+    for column, null_count in null_counts.items():
+        if null_count > 0:
+            print (f"{column}: {null_count}")
+
+    # Separamos en atributos y target
+    X = df.drop(['species'], axis=1)
+    y = df[['species']]
+
+    # Convertimos los datos a arrays
+    X_array = X.values
+    y_array = y.values
+
+    # Separamos dataset en conjunto de entrenamiento y conjunto de evaluación
+    X_train, X_test, y_train, y_test = train_test_split(X_array, y_array, test_size=0.2, random_state=42)
+
+    # Creamos y entrenamos el clasificador de árbol de decisión
+    classifier = DecisionTreeClassifier(algoritmo=ArbolID3, profundidad_max=5)
+    classifier.fit(X_train, y_train)
+
+    # Evaluamos el modelo
+    y_pred = classifier.predict(X_test)
+
+    # Calculamos la precisión del modelo
+    accuracy = np.mean(y_pred == y_test)
+    print("Accuracy:", accuracy)
 
 if __name__ == '__main__':
-    t = Arbol(1)
-    n2 = Arbol(2)
-    n3 = Arbol(3)
-    n4 = Arbol(4)
-    n5 = Arbol(5)
-    n6 = Arbol(6)
-    n7 = Arbol(7)
-    n8 = Arbol(8)
-    n9 = Arbol(9)
-    t.insertar_subarbol(n2)
-    t.insertar_subarbol(n3)
-    t.insertar_subarbol(n4)
-    n2.insertar_subarbol(n5)
-    n2.insertar_subarbol(n6)
-    n4.insertar_subarbol(n7)
-    n4.insertar_subarbol(n8)
-    n7.insertar_subarbol(n9)
-
-    print(t)
-
-    # print(f'Altura: {t.altura()}')
-    # print(f'Nodos: {len(t)}')
-    print(f'Nivel de 9: {t.nivel(9)}')
-
-    # print(f'BFS: {t.bfs()}')
-    # print(f'DFS preorder : {t.preorder()}')
-    # print(f'DFS postorder: {t.postorder()}')
-
-    # print(f'Antecesores: {t.antecesores(9)}')
-    # print(f'Recorrido guiado: {t.recorrido_guiado([2,0,0])}')
-
-    t2 = t.podar(7)
-    print(t2)
-
-    # print(t.pertenece(10))
-
-    # print(f'recorrido_guiado [2,0,0]: {t2.recorrido_guiado([2,0,0])}')
+    main()
 

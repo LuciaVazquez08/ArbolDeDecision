@@ -90,11 +90,11 @@ class Arbol(Generic[T]):
     def nivel(self, dato: T) -> int:
         return len(self.antecesores(dato)) + 1
 
-    def pertenece(self, x: T) -> bool:
-        if self.dato == x:
+    def pertenece(self, dato: T) -> bool:
+        if self.dato == dato:
             return True
         for subarbol in self.subarboles:
-            if subarbol.pertenece(x):
+            if subarbol.pertenece(dato):
                 return True
         return False
     
