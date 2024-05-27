@@ -29,6 +29,8 @@ def main():
     # Separamos dataset en conjunto de entrenamiento y conjunto de evaluación
     X_train, X_test, y_train, y_test = train_test_split(X_array, y_array, test_size=0.2, random_state=42)
 
+    print (X_train.shape, X_test.shape)
+
     # Creamos y entrenamos el clasificador de árbol de decisión
     classifier = DecisionTreeClassifier(algoritmo=ArbolID3, profundidad_max=5)
     classifier.fit(X_train, y_train)
@@ -37,8 +39,8 @@ def main():
     y_pred = classifier.predict(X_test)
 
     # Calculamos la precisión del modelo
-    accuracy = np.mean(y_pred == y_test)
-    print("Accuracy:", accuracy)
+    #accuracy = np.mean(y_pred == y_test)
+    #print("Accuracy:", accuracy)
 
 if __name__ == '__main__':
     main()

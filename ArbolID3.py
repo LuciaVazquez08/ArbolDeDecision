@@ -14,9 +14,6 @@ class ArbolID3(Arbol):
             tab = '.' * 4
             indent = tab * nivel
             out = indent + str(t.dato) + '\n'
-            # Agregar información específica de ArbolID3, si es necesario
-            if t._es_hoja:
-                out += indent + "Es hoja\n"
             for valor, subarbol in t._hijos.items():
                 out += indent + f"Valor: {valor}\n"
                 out += mostrar(subarbol, nivel + 1)

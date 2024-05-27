@@ -19,14 +19,15 @@ class DecisionTreeClassifier:
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
         atributos = list(range(X.shape[1]))
         self.arbol = self.algoritmo.construir(X, y, atributos, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
+        print(self.arbol)
         
     # Implementar la clasificación en base a los X recibidos -> devuelve la clase predecida para cada X
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray) -> list[int]:
         predicciones = []
         for instancia in X:
-            print(predicciones)
             predicciones.append(self._predict_instancia(instancia, self.arbol))
-        return np.array(predicciones)
+        print(predicciones)
+        return predicciones
     
     # TODO: Implementa la predicción para una instancia específica 
     def _predict_instancia(self, x: np.ndarray, arbol: ArbolID3 | ArbolC4_5) -> int: 
