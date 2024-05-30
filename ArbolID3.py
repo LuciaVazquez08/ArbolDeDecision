@@ -82,7 +82,6 @@ class ArbolID3(Arbol):
             arbol._hijos[valor] = subarbol
         
         return arbol
-
     
     @staticmethod
     def clase_mayoritaria(y: np.ndarray) -> int:

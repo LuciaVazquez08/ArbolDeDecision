@@ -7,7 +7,8 @@ from sklearn.model_selection import train_test_split
 def main():
 
     # Cargamos el dataset
-    df = pd.read_csv("C:/Users/naiar/Downloads/IRIS.csv")
+    # df = pd.read_csv("C:/Users/naiar/Downloads/IRIS.csv")
+    df = pd.read_csv("C:/Users/Usuario/Desktop/Iris.csv")
 
     # Vemos el balance del dataset (en el caso de estar desbalanceado tendríamos que manejarlo)
     balance = df['species'].value_counts()

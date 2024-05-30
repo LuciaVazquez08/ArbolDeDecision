@@ -1,8 +1,7 @@
 from ArbolID3 import ArbolID3
 from ArbolC4_5 import ArbolC4_5
 import numpy as np
-
-class DecisionTreeClassifier:
+class DecisionTreeClassifier():
     def __init__(self, algoritmo: ArbolID3 | ArbolC4_5, 
                  profundidad_max: int = None,
                  minimas_obs_n: int = None, 
