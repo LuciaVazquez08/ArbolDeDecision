@@ -3,6 +3,8 @@ from typing import List
 class DecissionTreeClassifier:
     def __init__(self):
         self.tree = None
+        
+    
     # Implementa el entrenamiento del árbol
     def fit(self, X: List[List[float]], y: List[str]):
         self._contruir_arbol(X, y)
@@ -21,3 +23,7 @@ class DecissionTreeClassifier:
     # Implementa la predicción para una instancia específica
     def _predict_instance(self, instance: List[float], tree_node) -> str:
         pass
+    
+    #transf es para trabajar con los encodings
+    #predict predice
+    #fit entrena el modelo
