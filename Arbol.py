@@ -156,9 +156,5 @@ class Arbol(Generic[T]):
             return nuevo
         
     def eliminar_nodo(self, dato: T):
-<<<<<<< HEAD
-        pass
-=======
         pass
         
->>>>>>> 94e8d0dae1836c16a555d214c6ec724cf7225617
