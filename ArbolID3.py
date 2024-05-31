@@ -46,17 +46,17 @@ class ArbolID3(Arbol):
             clase_mayoritaria = cls.clase_mayoritaria(y)
             return ArbolID3(clase_mayoritaria, es_hoja=True)
         
-        # Criterio de parada: Sin atributos para dividir
-        if not atributos:
-            clase_mayoritaria = cls.clase_mayoritaria(y)
-            return ArbolID3(clase_mayoritaria, es_hoja=True)
-        
         # Seleccionamos el mejor atributo en base a entropía y ganancia de información
         ganancias = [Entropia.ganancia_informacion_atributo(X, y, atributo) for atributo in atributos]
         mejor_atributo = atributos[np.argmax(ganancias)]
         
         # Criterio de parada: Ganancia mínima
         if ganancia_minima is not None and ganancias[np.argmax(ganancias)] < ganancia_minima:
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            return ArbolID3(clase_mayoritaria, es_hoja=True)
+        
+        # Criterio de parada: No quedan atributos
+        if not atributos:
             clase_mayoritaria = cls.clase_mayoritaria(y)
             return ArbolID3(clase_mayoritaria, es_hoja=True)
         
@@ -75,12 +75,13 @@ class ArbolID3(Arbol):
             # Criterio de parada: Mínimas observaciones por hoja
             if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                subarbol = ArbolID3(valor=clase_mayoritaria, es_hoja=True)
+                subarbol = ArbolID3(clase_mayoritaria, es_hoja=True)
             else:
                 subarbol = cls.construir(sub_X, sub_y, atributos_restantes, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
             
             arbol._hijos[valor] = subarbol
-        
+            
+        print(arbol)
         return arbol
 
     

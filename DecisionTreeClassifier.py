@@ -19,25 +19,26 @@ class DecisionTreeClassifier:
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
         atributos = list(range(X.shape[1]))
         self.arbol = self.algoritmo.construir(X, y, atributos, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
-        print(self.arbol)
         
     # Implementar la clasificación en base a los X recibidos -> devuelve la clase predecida para cada X
     def predict(self, X: np.ndarray) -> list[int]:
         predicciones = []
         for instancia in X:
             predicciones.append(self._predict_instancia(instancia, self.arbol))
-        print(predicciones)
-        return predicciones
+        return np.array(predicciones)
     
     # TODO: Implementa la predicción para una instancia específica 
     def _predict_instancia(self, x: np.ndarray, arbol: ArbolID3 | ArbolC4_5) -> int: 
         if arbol._es_hoja:
             return arbol.dato
         else:
-            valor_atributo = x[arbol.dato]
-            subarbol = arbol._hijos.get(valor_atributo)
-            if subarbol is None:
-                return arbol.clase_mayoritaria(x)
-            return self._predict_instancia(x, subarbol)
+            atributo = arbol.dato
+            valor_atributo = x[atributo]
+            if valor_atributo in arbol._hijos:
+                arbol = arbol._hijos[valor_atributo]
+            else:
+                # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
+                return ArbolID3.clase_mayoritaria([nodo.dato for nodo in arbol._hijos.values() if nodo._es_hoja])
+            
 
     # TODO: Implementar transform: Se encarga del encoding
