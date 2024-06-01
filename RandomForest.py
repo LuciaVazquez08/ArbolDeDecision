@@ -35,7 +35,7 @@ class RandomForest():
 
     def fit(self, X: np.ndarray , y: np.ndarray) -> None:
         if self.bootstrap:
-            muestras = bootstraping(X,y, self.numero_estimadores)
+            muestras = RandomForest.bootstraping(X,y, self.numero_estimadores)
         else:
             muestras = [[X, y] for _ in range(self.numero_estimadores)]
 

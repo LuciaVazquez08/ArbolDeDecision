@@ -55,19 +55,26 @@ class ArbolID3(Arbol):
         ganancias = [Entropia.ganancia_informacion_atributo(X, y, atributo) for atributo in atributos]
         mejor_atributo = atributos[np.argmax(ganancias)]
         
+        #print(f"Ganancias en profundidad {profundidad_actual}: {ganancias}")
+        #print(f"Mejor atributo en profundidad {profundidad_actual}: {mejor_atributo} con ganancia {ganancias[np.argmax(ganancias)]}")
+        
         # Criterio de parada: Ganancia mínima
         if ganancia_minima is not None and ganancias[np.argmax(ganancias)] < ganancia_minima:
             clase_mayoritaria = cls.clase_mayoritaria(y)
             return ArbolID3(clase_mayoritaria, es_hoja=True)
         
+        if not atributos:
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            return ArbolID3(clase_mayoritaria, es_hoja=True)
+
         # Creamos el árbol con el mejor atributo
         arbol = ArbolID3(mejor_atributo)
         
-        atributos_restantes = atributos.copy()
-        atributos_restantes.remove(mejor_atributo)
-        
         # Creamos nodos para cada valor del mejor atributo
         for valor in np.unique(X[:, mejor_atributo]):
+            atributos_restantes = atributos.copy()
+            atributos_restantes.remove(mejor_atributo)
+        
             indices = np.where(X[:, mejor_atributo] == valor)[0]
             sub_X = X[indices]
             sub_y = y[indices]
@@ -82,6 +89,7 @@ class ArbolID3(Arbol):
             arbol._hijos[valor] = subarbol
         
         return arbol
+
     
     @staticmethod
     def clase_mayoritaria(y: np.ndarray) -> int:
