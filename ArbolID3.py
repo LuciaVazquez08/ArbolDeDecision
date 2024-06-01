@@ -1,11 +1,13 @@
 import numpy as np
 from Arbol import Arbol
 from Entropia import Entropia
+from typing import Generic, TypeVar
+T = TypeVar('T')
 
 class ArbolID3(Arbol):
     
-    def __init__(self, dato = None, es_hoja: bool = False) -> None:
-        super().__init__(dato)
+    def __init__(self, dato, es_hoja: bool = False) -> None:
+        super().__init__(dato) 
         self._es_hoja = es_hoja
         self._hijos: dict = {}
 
@@ -19,10 +21,11 @@ class ArbolID3(Arbol):
                 out += mostrar(subarbol, nivel + 1)
             return out
         return mostrar(self, 0)
-    
+
     @classmethod
     # X: dataset convertido en arrays sin la primer columna de atributos
     # y: columna con las clases
+
     def construir(cls, X: np.ndarray, y: np.ndarray, 
                   atributos: list[int],
                   profundidad_max: int = None, 
@@ -90,7 +93,6 @@ class ArbolID3(Arbol):
         
         return arbol
 
-    
     @staticmethod
     def clase_mayoritaria(y: np.ndarray) -> int:
         clases, conteo = np.unique(y, return_counts=True)
