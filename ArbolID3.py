@@ -134,7 +134,7 @@ y = data['Diabetes_012'].to_numpy()  # Convertir a numpy array
 atributos = list(range(X.shape[1]))  # Asegura que la lista de atributos cubra todas las columnas
 
 # Construcción del árbol ID3
-arbol = ArbolID3.construir(X, y, atributos, profundidad_max=2)
+arbol = ArbolID3.construir(X, y, atributos, profundidad_max=5)
 
 # Imprime el árbol
 print("Árbol de decisión ID3:")
