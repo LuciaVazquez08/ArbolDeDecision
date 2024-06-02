@@ -3,8 +3,10 @@ from Arbol import Arbol
 from Entropia import Entropia
 
 class ArbolC4_5(Arbol):
-    def __init__(self, dato = None, es_hoja: bool = False) -> None: # no está armada, solo copie y pegue ID3
+    def __init__(self, dato = None, umbral: int | float = None ,es_hoja: bool = False) -> None: 
         super().__init__(dato)
+        self.umbral = umbral
+        self.label = None
         self._es_hoja = es_hoja
         self._hijos: dict = {}
 
@@ -82,7 +84,6 @@ class ArbolC4_5(Arbol):
             
         print(arbol)
         return arbol
-
     
     @staticmethod
     def clase_mayoritaria(y: np.ndarray) -> int:
