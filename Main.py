@@ -1,9 +1,9 @@
+from graphviz import Digraph
 import numpy as np
 import pandas as pd
 from ArbolID3 import ArbolID3
 from DecisionTreeClassifier import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, recall_score, f1_score
 
 def main():
 
@@ -19,7 +19,7 @@ def main():
 
     X = df.drop(['species'], axis=1)
     y = df[['species']]
-
+    
     X_array = X.values
     y_array = y.values
 
@@ -30,10 +30,13 @@ def main():
     classifier = DecisionTreeClassifier(algoritmo = ArbolID3)
     classifier.fit(X_train, y_train)
 
+
     # Evaluamos el modelo
     y_pred = classifier.predict(X_test)
 
-    # Calculamos la precisión del modelo
+    print(y_pred)
+    print(y_test)
+
     accuracy = np.mean(y_pred == y_test)
     print("Accuracy:", accuracy)
 

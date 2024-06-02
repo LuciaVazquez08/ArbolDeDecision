@@ -4,37 +4,30 @@ from Entropia import Entropia
 
 class ArbolID3(Arbol):
     
-    def __init__(self, dato = None, es_hoja: bool = False) -> None:
-        super().__init__(dato)
+    def __init__(self, dato, es_hoja: bool = False) -> None:
+        super().__init__(dato) 
         self._es_hoja = es_hoja
         self._hijos: dict = {}
 
-    import numpy as np
-from Arbol import Arbol
-from Entropia import Entropia
+    def __str__(self, nivel=0) -> str:
+        # Espacio de indentación basado en el nivel de profundidad
+        espacio_indentado = "    " * nivel
+        if self._es_hoja:
+            return f"{espacio_indentado}[Hoja: {self.dato}]\n"
+        else:
+            resultado = f"{espacio_indentado}[Nodo: {self.dato}]\n"
+            for valor, hijo in self._hijos.items():
+                resultado += f"{espacio_indentado}├── Valor: {valor}\n"
+                resultado += hijo.__str__(nivel + 1)
+            return resultado
 
-class ArbolID3(Arbol):
-    
-    def __init__(self, dato = None, es_hoja: bool = False) -> None:
-        super().__init__(dato)
-        self._es_hoja = es_hoja
-        self._hijos: dict = {}
-
-    def __str__(self):
-        def mostrar(t: ArbolID3, nivel: int):
-            tab = '.' * 4
-            indent = tab * nivel
-            out = indent + str(t.dato) + '\n'
-            for valor, subarbol in t._hijos.items():
-                out += indent + f"Valor: {valor}\n"
-                out += mostrar(subarbol, nivel + 1)
-            return out
-        return mostrar(self, 0)
-    
     @classmethod
     # X: dataset convertido en arrays sin la primer columna de atributos
     # y: columna con las clases
-    def construir(cls, X: np.ndarray, y: np.ndarray, 
+
+    def construir(cls, 
+                  X: np.ndarray, 
+                  y: np.ndarray, 
                   atributos: list[int],
                   profundidad_max: int = None, 
                   minimas_obs_n: int = None, 
@@ -66,9 +59,6 @@ class ArbolID3(Arbol):
         ganancias = [Entropia.ganancia_informacion_atributo(X, y, atributo) for atributo in atributos]
         mejor_atributo = atributos[np.argmax(ganancias)]
         
-        #print(f"Ganancias en profundidad {profundidad_actual}: {ganancias}")
-        #print(f"Mejor atributo en profundidad {profundidad_actual}: {mejor_atributo} con ganancia {ganancias[np.argmax(ganancias)]}")
-        
         # Criterio de parada: Ganancia mínima
         if ganancia_minima is not None and ganancias[np.argmax(ganancias)] < ganancia_minima:
             clase_mayoritaria = cls.clase_mayoritaria(y)
@@ -98,14 +88,18 @@ class ArbolID3(Arbol):
                 subarbol = cls.construir(sub_X, sub_y, atributos_restantes, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
             
             arbol._hijos[valor] = subarbol
-        
         return arbol
 
-    
     @staticmethod
     def clase_mayoritaria(y: np.ndarray) -> int:
         clases, conteo = np.unique(y, return_counts=True)
         return clases[np.argmax(conteo)]
+    
+    
+        
+        
+    
+
     
         
         
