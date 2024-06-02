@@ -76,9 +76,10 @@ class ArbolC4_5:
 
 
     @staticmethod
+    #este metodo es solo para probar
     def determinar_tipo_atributo(valores_atributo):
         # Determina si un atributo es continuo o categórico
-        if len(np.unique(valores_atributo)) > 4:  # umbral arbitrario, puedes ajustarlo según tu necesidad
+        if len(np.unique(valores_atributo)) > 4: 
             return 'continuo'
         else:
             return 'categorico'
@@ -131,6 +132,7 @@ class ArbolC4_5:
             if n_izquierda == 0 or n_derecha == 0:
                 continue
             
+            #aca esta uno de los problemas
             gain_ratio = Entropia.gain_ratio(np.array([grupo_1_atributo, grupo_2_atributo], dtype=object).T, atributo_continuo, 0)
             
             if gain_ratio > ganancia_maxima:
