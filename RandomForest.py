@@ -69,7 +69,7 @@ class RandomForest():
                 muestras = RandomForest.bootstraping(X,y, self.numero_estimadores)
             else:
                 muestras = [[X, y] for _ in range(self.numero_estimadores)]
-            
+                        
             muestras = RandomForest.random_feature_selection(muestras, feature_selection_method = self.feature_selection_method)
 
             for n in range(self.numero_estimadores):
@@ -104,5 +104,7 @@ class RandomForest():
     #TODO: devuelve la media de la accuracy+
         pass
 
-
-    #TODO: decision_path(x)
+    def decision_path():
+    #TODO: decision_path(x)     
+        pass
+    
