@@ -30,12 +30,8 @@ def main():
     classifier = DecisionTreeClassifier(algoritmo = ArbolID3)
     classifier.fit(X_train, y_train)
 
-
     # Evaluamos el modelo
     y_pred = classifier.predict(X_test)
-
-    print(y_pred)
-    print(y_test)
 
     accuracy = np.mean(y_pred == y_test)
     print("Accuracy:", accuracy)

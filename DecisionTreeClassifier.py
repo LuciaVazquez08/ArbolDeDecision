@@ -34,7 +34,7 @@ class DecisionTreeClassifier:
                 return _predict_instancia(instancia, nodo_actual._hijos[valor])
             else:
                 # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
-                clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja] # el problema es con esto, los devuelve mal
+                clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja] 
                 return [ArbolID3.clase_mayoritaria(np.array(clases))]
         
         predicciones = [_predict_instancia(instancia, self.arbol) for instancia in X]
