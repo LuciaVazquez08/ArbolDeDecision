@@ -97,6 +97,28 @@ class ArbolID3(Arbol):
         
         return arbol
 
+    def visualizar_arbol(self, arbol=None, padre=None, etiquetas=None):
+        if etiquetas is None:
+            etiquetas = {}
+
+        if arbol is None:
+            arbol = self
+
+        if arbol.es_hoja():
+            nodo_id = str(id(arbol))
+            etiquetas[nodo_id] = f"{arbol.dato} -> Clase: {self.clase_mayoritaria(arbol)}"  # Mostrar la clase mayoritaria en las hojas
+        else:
+            nodo_id = str(id(arbol))
+            etiquetas[nodo_id] = str(arbol.dato)
+
+            if padre is not None:
+                etiquetas[padre] += f" -> {arbol.dato}"
+
+            for valor, hijo in arbol._hijos.items():
+                self.visualizar_arbol(hijo, nodo_id, etiquetas)
+
+        return etiquetas
+
     @staticmethod
     def clase_mayoritaria(y: np.ndarray) -> int:
         clases, conteo = np.unique(y, return_counts=True)
