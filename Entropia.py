@@ -1,5 +1,6 @@
 import numpy as np
 
+#agregue split y gain ratio para los atributos continuos, pero capaz hay que corregirlos. No por las cuentas sino por lo que le pasamos. Puede ir por aca el error.
 class Entropia:
     def entropia(y: np.ndarray) -> float: 
         clases_por_atributo, cantidad_cada_clase = np.unique(y, return_counts=True) 
