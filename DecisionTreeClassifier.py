@@ -24,7 +24,7 @@ class DecisionTreeClassifier:
             atributos = list(range(X.shape[1]))
             self.arbol = self.algoritmo.construir(X, y, atributos, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
         else:
-            raise ValueError("debe haber la misma cantidad de instancias en los features y en el target")
+            raise ValueError("Debe haber la misma cantidad de instancias en los features y en el target.")
         
     # Implementar la clasificación en base a los X recibidos -> devuelve la clase predecida para cada X
     def predict(self, X: np.ndarray) -> list[list[T]]:

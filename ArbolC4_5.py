@@ -1,9 +1,9 @@
-
 from Entropia import Entropia
+from GainRatio import GainRatio
 from Arbol import Arbol
 import numpy as np
 
-class ArbolC4_5:
+class ArbolC4_5():
     
     def __init__(self, dato=None, es_hoja=False):
         self.dato = dato
@@ -73,6 +73,11 @@ class ArbolC4_5:
                 arbol.hijos[valor] = sub_arbol
 
         return arbol
+    
+    @staticmethod
+    def clase_mayoritaria(y: np.ndarray) -> int:
+        clases, conteo = np.unique(y, return_counts=True)
+        return clases[np.argmax(conteo)]
 
     @staticmethod
     #este metodo es solo para probar
@@ -132,7 +137,7 @@ class ArbolC4_5:
                 continue
             
             #aca esta uno de los problemas
-            gain_ratio = Entropia.gain_ratio(np.array([grupo_1_atributo, grupo_2_atributo], dtype=object).T, atributo_continuo, 0)
+            gain_ratio = GainRatio.gain_ratio(np.array([grupo_1_atributo, grupo_2_atributo], dtype=object).T, atributo_continuo, 0)
             
             if gain_ratio > ganancia_maxima:
                 ganancia_maxima = gain_ratio
