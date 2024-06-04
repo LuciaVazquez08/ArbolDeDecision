@@ -2,11 +2,11 @@ from typing import TypeVar
 from ArbolID3 import ArbolID3
 from ArbolC4_5 import ArbolC4_5
 import numpy as np
-
+from typing import Generic, TypeVar
 T = TypeVar('T')
 
 class DecisionTreeClassifier:
-    def __init__(self, algoritmo: ArbolID3 | ArbolC4_5, 
+    def __init__(self, algoritmo: ArbolID3 | ArbolC4_5 = ArbolID3, 
                  profundidad_max: int = None,
                  minimas_obs_n: int = None, 
                  minimas_obs_h: int = None, 
@@ -20,8 +20,11 @@ class DecisionTreeClassifier:
         self.arbol = None
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
-        atributos = list(range(X.shape[1]))
-        self.arbol = self.algoritmo.construir(X, y, atributos, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
+        if len(X) == len(y):
+            atributos = list(range(X.shape[1]))
+            self.arbol = self.algoritmo.construir(X, y, atributos, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
+        else:
+            raise ValueError("debe haber la misma cantidad de instancias en los features y en el target")
         
     # Implementar la clasificación en base a los X recibidos -> devuelve la clase predecida para cada X
     def predict(self, X: np.ndarray) -> list[list[T]]:
@@ -40,5 +43,6 @@ class DecisionTreeClassifier:
         predicciones = [_predict_instancia(instancia, self.arbol) for instancia in X]
         return predicciones
 
-
+    # TODO: get_params -> devuelve los hiperparametros no nulos
+    # TODO: set_params
     # TODO: Implementar transform: Se encarga del encoding

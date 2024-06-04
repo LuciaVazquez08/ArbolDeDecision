@@ -2,6 +2,9 @@ import numpy as np
 from Arbol import Arbol
 from Entropia import Entropia
 
+from typing import Generic, TypeVar
+T = TypeVar('T')
+
 class ArbolID3(Arbol):
     
     def __init__(self, dato, es_hoja: bool = False) -> None:
@@ -59,6 +62,9 @@ class ArbolID3(Arbol):
         ganancias = [Entropia.ganancia_informacion_atributo(X, y, atributo) for atributo in atributos]
         mejor_atributo = atributos[np.argmax(ganancias)]
         
+        #print(f"Ganancias en profundidad {profundidad_actual}: {ganancias}")
+        #print(f"Mejor atributo en profundidad {profundidad_actual}: {mejor_atributo} con ganancia {ganancias[np.argmax(ganancias)]}")
+        
         # Criterio de parada: Ganancia mínima
         if ganancia_minima is not None and ganancias[np.argmax(ganancias)] < ganancia_minima:
             clase_mayoritaria = cls.clase_mayoritaria(y)
@@ -89,6 +95,29 @@ class ArbolID3(Arbol):
             
             arbol._hijos[valor] = subarbol
         return arbol
+
+    def visualizar_arbol(self, arbol=None, padre=None, etiquetas=None):
+        if etiquetas is None:
+            etiquetas = {}
+
+        if arbol is None:
+            arbol = self
+
+        if arbol.es_hoja():
+            nodo_id = str(id(arbol))
+            etiquetas[nodo_id] = f"{arbol.dato} -> Clase: {self.clase_mayoritaria(arbol)}"  # Mostrar la clase mayoritaria en las hojas
+        else:
+            nodo_id = str(id(arbol))
+            etiquetas[nodo_id] = str(arbol.dato)
+
+            if padre is not None:
+                etiquetas[padre] += f" -> {arbol.dato}"
+
+            for valor, hijo in arbol._hijos.items():
+                self.visualizar_arbol(hijo, nodo_id, etiquetas)
+
+        return etiquetas
+
 
     @staticmethod
     def clase_mayoritaria(y: np.ndarray) -> int:
