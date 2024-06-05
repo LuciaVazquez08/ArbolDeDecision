@@ -74,6 +74,7 @@ class ArbolC4_5:
         return arbol
 
     @staticmethod
+<<<<<<< HEAD
     def determinar_tipo_atributo(X: np.ndarray, top_n: int = 3, umbral: float = 0.8) -> str:
         tipo_atributo = 'continuo'  
 
@@ -94,6 +95,15 @@ class ArbolC4_5:
                 tipo_atributo = 'categorico'
 
         return tipo_atributo
+=======
+    #este metodo es solo para probar
+    def determinar_tipo_atributo(valores_atributo):
+        # Determina si un atributo es continuo o categórico
+        if len(np.unique(valores_atributo)) > 4: 
+            return 'continuo'
+        else:
+            return 'categorico'
+>>>>>>> de869096a28cf1c385605e7f71aec808ea107028
 
     @staticmethod
     def seleccionar_mejor_atributo(X, y, atributos):
@@ -140,11 +150,16 @@ class ArbolC4_5:
             if n_izquierda == 0 or n_derecha == 0:
                 continue
             
+<<<<<<< HEAD
             # Crear una matriz X para gain_ratio
             X_dividido = np.concatenate((np.zeros(n_izquierda), np.ones(n_derecha)))
             y_dividido = np.concatenate((grupo_1_y, grupo_2_y))
             
             gain_ratio = Entropia.gain_ratio(X_dividido.reshape(-1, 1), y_dividido, 0)
+=======
+            #aca esta uno de los problemas
+            gain_ratio = Entropia.gain_ratio(np.array([grupo_1_atributo, grupo_2_atributo], dtype=object).T, atributo_continuo, 0)
+>>>>>>> de869096a28cf1c385605e7f71aec808ea107028
             
             if gain_ratio > ganancia_maxima:
                 ganancia_maxima = gain_ratio
