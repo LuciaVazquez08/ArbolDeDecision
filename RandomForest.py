@@ -1,3 +1,4 @@
+from pandas import DataFrame
 from ArbolID3 import ArbolID3
 from ArbolC4_5 import ArbolC4_5
 import DecisionTreeClassifier
@@ -22,7 +23,7 @@ class RandomForest():
         self.numero_estimadores = numero_estimadores
         self.bootstrap = bootstrap
         self.feature_selection_method = feature_selection_method
-        self.arboles = []  #no se si es necesario que este como atrubuto pero bueno
+        self.arboles= []  #no se si es necesario que este como atrubuto pero bueno
 
     @staticmethod
     def bootstraping(X: np.ndarray , y: np.ndarray, n_estimadores: int) -> list[list[np.ndarray, np.ndarray]]:
@@ -62,13 +63,15 @@ class RandomForest():
         
         return muestras_finales
 
-    def fit(self, X: np.ndarray , y: np.ndarray) -> None:
-        if len(X) == len(y):
+    def fit(self, X: DataFrame, y: DataFrame) -> None:
+        X_array = X.values
+        y_array = y.values
 
+        if len(X_array) == len(y_array):
             if self.bootstrap:
-                muestras = RandomForest.bootstraping(X,y, self.numero_estimadores)
+                muestras = RandomForest.bootstraping(X_array, y_array, self.numero_estimadores)
             else:
-                muestras = [[X, y] for _ in range(self.numero_estimadores)]
+                muestras = [[X_array, y_array] for _ in range(self.numero_estimadores)]
                         
             muestras = RandomForest.random_feature_selection(muestras, feature_selection_method = self.feature_selection_method)
 
@@ -79,11 +82,12 @@ class RandomForest():
         else:
             raise ValueError("debe haber la misma cantidad de instancias en los features y en el target")
         
-    def predict(self, X: np.ndarray):
+    def predict(self, X: DataFrame):
+        X_array = X.values
         predictions = []
 
         for arbol in self.arboles:
-            pred = arbol.predict(X)
+            pred = arbol.predict(X_array)
             predictions.append(pred)
         
         return Counter(predictions).most_common(1)[0][0]

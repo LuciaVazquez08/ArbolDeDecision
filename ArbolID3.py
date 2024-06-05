@@ -41,7 +41,7 @@ class ArbolID3(Arbol):
         
         # Criterio de parada: Nodo puro (todos los elementos del nodo pertenecen a la misma clase)
         if len(np.unique(y)) == 1:
-            hoja = ArbolID3(y[0], atributo=nombres_atributos[atributos[0]], es_hoja=True)
+            hoja = ArbolID3(y[0], None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
             
@@ -56,6 +56,11 @@ class ArbolID3(Arbol):
         if minimas_obs_n is not None and len(y) < minimas_obs_n:
             clase_mayoritaria = cls.clase_mayoritaria(y)
             hoja = ArbolID3(y[0], atributo=nombres_atributos[atributos[0]], es_hoja=True)
+            hoja._num_samples = len(y)
+            return hoja
+        
+        if not atributos:  # Sin atributos para dividir
+            hoja = ArbolID3(y[0], None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         

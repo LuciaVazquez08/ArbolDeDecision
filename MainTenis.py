@@ -7,22 +7,23 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_ma
 
 def main():
 
-    df = pd.read_csv("C:/Users/naiar/Downloads/clima.csv")
+    df = pd.read_csv("C:/Users/naiar/Downloads/play_tennis.csv")
 
     # Vemos el balance del target 
-    balance = df['decision'].value_counts() 
+    balance = df['play'].value_counts() 
     print(balance)
 
-
-    X = df.drop(['decision', 'day'], axis=1)
-    y = df[['decision']]
+    X = df.drop(['play'], axis=1)
+    y = df[['play']]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     print (X_train.shape, X_test.shape)
 
+    print(X_train)
+
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = DecisionTreeClassifier(algoritmo = ArbolC4_5)
+    classifier = DecisionTreeClassifier(algoritmo = ArbolID3)
     classifier.fit(X_train, y_train)
 
     print(classifier.arbol)
@@ -38,7 +39,7 @@ def main():
     print(f'Precision: {precision}')
     print(f'Recall: {recall}')
     print(f'{matriz}')
-
+ 
 
 if __name__ == '__main__':
     main()
