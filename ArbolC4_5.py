@@ -3,7 +3,7 @@ from GainRatio import GainRatio
 from Arbol import Arbol
 import numpy as np
 
-class ArbolC4_5():
+class ArbolC4_5:
     
     def __init__(self, dato=None, es_hoja=False):
         self.dato = dato

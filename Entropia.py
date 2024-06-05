@@ -1,11 +1,13 @@
 import numpy as np
+import pandas as pd
 
 class Entropia:
-    @staticmethod
+
+    @staticmethod 
     def entropia(y: np.ndarray) -> float: 
-        clases, frecuencia_clase = np.unique(y, return_counts=True) 
+        clase, frecuencia_clase = np.unique(y, return_counts=True) 
         probabilidad_clase = frecuencia_clase / len(y) 
-        return -np.sum(probabilidad_clase * np.log2(probabilidad_clase)) 
+        return -np.sum(probabilidad_clase * np.log2(probabilidad_clase))
 
     @staticmethod
     def ganancia_informacion_atributo(X: np.ndarray, y: np.ndarray, indice_atributo: int) -> float:
@@ -16,3 +18,4 @@ class Entropia:
             subconjunto_clase = y[X[:, indice_atributo] == clase]
             entropia_ponderada += (cantidad / len(y)) * Entropia.entropia(subconjunto_clase)
         return entropia_inicial - entropia_ponderada
+

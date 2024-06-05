@@ -22,6 +22,7 @@ def main():
     X_array = X.values
     y_array = y.values
 
+
     X_train, X_test, y_train, y_test = train_test_split(X_array, y_array, test_size=0.2, random_state=42)
     print (X_train.shape, X_test.shape)
 
@@ -32,8 +33,12 @@ def main():
     # Evaluamos el modelo
     y_pred = classifier.predict(X_test)
 
+    nombres_atributos = X.columns.tolist()
+    print(nombres_atributos)
+
     accuracy = np.mean(y_pred == y_test)
     print("Accuracy:", accuracy)
+
 
 if __name__ == '__main__':
     main()
