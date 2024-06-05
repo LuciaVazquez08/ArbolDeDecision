@@ -41,28 +41,21 @@ class ArbolID3(Arbol):
         
         # Criterio de parada: Nodo puro (todos los elementos del nodo pertenecen a la misma clase)
         if len(np.unique(y)) == 1:
-            hoja = ArbolID3(y[0], es_hoja=True)
+            hoja = ArbolID3(y[0], atributo=nombres_atributos[atributos[0]], es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
             
         # Criterio de parada: Maxima profundidad
         if profundidad_max is not None and profundidad_actual >= profundidad_max:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, es_hoja=True)
+            hoja = ArbolID3(y[0], atributo=nombres_atributos[atributos[0]], es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Mínimas observaciones por nodo
         if minimas_obs_n is not None and len(y) < minimas_obs_n:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, es_hoja=True)
-            hoja._num_samples = len(y)
-            return hoja
-        
-        # Criterio de parada: Sin atributos para dividir
-        if not atributos:
-            clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, es_hoja=True)
+            hoja = ArbolID3(y[0], atributo=nombres_atributos[atributos[0]], es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
@@ -72,13 +65,13 @@ class ArbolID3(Arbol):
         # Criterio de parada: Ganancia mínima
         if ganancia_minima is not None and ganancias[np.argmax(ganancias)] < ganancia_minima:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, es_hoja=True)
+            hoja = ArbolID3(y[0], atributo=nombres_atributos[atributos[0]], es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
 
         # Creamos el árbol con el mejor atributo
         mejor_atributo = atributos[np.argmax(ganancias)]
-        arbol = ArbolID3(mejor_atributo, atributo = nombres_atributos[mejor_atributo])
+        arbol = ArbolID3(mejor_atributo, atributo=nombres_atributos[mejor_atributo])
         arbol._num_samples = len(y)
         
         # Creamos nodos para cada valor del mejor atributo
@@ -94,7 +87,7 @@ class ArbolID3(Arbol):
             # Criterio de parada: Mínimas observaciones por hoja
             if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                subarbol = ArbolID3(valor=clase_mayoritaria, es_hoja=True)
+                subarbol = ArbolID3(valor=clase_mayoritaria, atributo=nombres_atributos[atributos[0]], es_hoja=True)
                 subarbol._num_samples = len(sub_y)
             else:
                 subarbol = cls.construir(sub_X, sub_y, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
