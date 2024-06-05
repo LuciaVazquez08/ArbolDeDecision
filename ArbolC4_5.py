@@ -1,7 +1,6 @@
-
 from Entropia import Entropia
-from Arbol import Arbol
 import numpy as np
+from Arbol import Arbol
 
 class ArbolC4_5:
     
@@ -74,29 +73,42 @@ class ArbolC4_5:
 
         return arbol
 
-
     @staticmethod
-    def determinar_tipo_atributo(valores_atributo):
-        # Determina si un atributo es continuo o categórico
-        if len(np.unique(valores_atributo)) > 4:  # umbral arbitrario, puedes ajustarlo según tu necesidad
-            return 'continuo'
-        else:
-            return 'categorico'
+    def determinar_tipo_atributo(X: np.ndarray, top_n: int = 3, umbral: float = 0.8) -> str:
+        tipo_atributo = 'continuo'  
+
+        valores_unicos, conteos = np.unique(X, return_counts=True)
+        
+        if len(conteos) > 0:
+        
+            top_n = min(top_n, len(conteos))
+
+    
+            indices_ordenados = np.argsort(conteos)[::-1]
+            top_conteos = conteos[indices_ordenados][:top_n]
+
+            proporcion = np.sum(top_conteos) / len(X)
+
+    
+            if proporcion >= umbral:
+                tipo_atributo = 'categorico'
+
+        return tipo_atributo
 
     @staticmethod
     def seleccionar_mejor_atributo(X, y, atributos):
-        mejor_ganancia = -100
+        mejor_ganancia = -np.inf
         mejor_atributo = None
         mejor_umbral = None
 
         for atributo in atributos:
             valores_atributo = X[:, atributo]
 
-            # Verificar si el atributo es continuo
+            # Verificar el tipo de atributo 
             tipo_atributo = ArbolC4_5.determinar_tipo_atributo(valores_atributo)
 
             if tipo_atributo == 'continuo':
-                ganancia, umbral = ArbolC4_5.obtener_umbral_y_gain_ratio(valores_atributo, y)
+                umbral, ganancia = ArbolC4_5.obtener_umbral_y_gain_ratio(valores_atributo, y)
             else:
                 ganancia = Entropia.ganancia_informacion_atributo(X, y, atributo)
                 umbral = None
@@ -109,29 +121,30 @@ class ArbolC4_5:
         return mejor_atributo, mejor_umbral
 
     @staticmethod
-    def obtener_umbral_y_gain_ratio(atributo_continuo: np.ndarray, y: np.ndarray):
-        ganancia_maxima = -np.inf
+    def obtener_umbral_y_gain_ratio(atributo_continuo, y):
+        ganancia_maxima = -1
         umbral_optimo = None
         
-        valores_unicos = np.unique(atributo_continuo)
+        # Ordenar los valores únicos del atributo continuo
+        valores_unicos = np.sort(np.unique(atributo_continuo))
         
         for i in range(len(valores_unicos) - 1):
             umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
             
-            grupo_1_indices = np.where(atributo_continuo <= umbral)[0]
-            grupo_2_indices = np.where(atributo_continuo > umbral)[0]
-            
-            grupo_1_atributo = atributo_continuo[grupo_1_indices]
-            grupo_2_atributo = atributo_continuo[grupo_2_indices]
-            
-            n_total = len(y)
-            n_izquierda = len(grupo_1_atributo)
-            n_derecha = len(grupo_2_atributo)
+            grupo_1_y = y[atributo_continuo <= umbral]
+            grupo_2_y = y[atributo_continuo > umbral]
+
+            n_izquierda = len(grupo_1_y)
+            n_derecha = len(grupo_2_y)
             
             if n_izquierda == 0 or n_derecha == 0:
                 continue
             
-            gain_ratio = Entropia.gain_ratio(np.array([grupo_1_atributo, grupo_2_atributo], dtype=object).T, atributo_continuo, 0)
+            # Crear una matriz X para gain_ratio
+            X_dividido = np.concatenate((np.zeros(n_izquierda), np.ones(n_derecha)))
+            y_dividido = np.concatenate((grupo_1_y, grupo_2_y))
+            
+            gain_ratio = Entropia.gain_ratio(X_dividido.reshape(-1, 1), y_dividido, 0)
             
             if gain_ratio > ganancia_maxima:
                 ganancia_maxima = gain_ratio
@@ -139,32 +152,51 @@ class ArbolC4_5:
         
         return umbral_optimo, ganancia_maxima
 
-
-
-# Supongamos que las clases para cada instancia son binarias (0 o 1)
-y = np.array([0, 1, 0, 1, 0, 1, 0, 1, 0, 1])
-
-# Datos ficticios: combinamos columnas categóricas (representadas por enteros) y continuas (floats)
-X = np.array([
-    [1, 5.1, 3.5, 1.4, 0.2],  # Clase 0
-    [2, 4.9, 3.0, 1.4, 0.2],  # Clase 1
-    [1, 4.7, 3.2, 1.3, 0.2],  # Clase 0
-    [2, 4.6, 3.1, 1.5, 0.2],  # Clase 1
-    [1, 5.0, 3.6, 1.4, 0.2],  # Clase 0
-    [2, 5.4, 3.9, 1.7, 0.4],  # Clase 1
-    [1, 4.6, 3.4, 1.4, 0.3],  # Clase 0
-    [2, 5.0, 3.4, 1.5, 0.2],  # Clase 1
-    [1, 4.4, 2.9, 1.4, 0.2],  # Clase 0
-    [2, 4.9, 3.1, 1.5, 0.1],  # Clase 1
-])
-
-# Atributos a considerar para el árbol de decisión (índices de las columnas)
-atributos = list(range(X.shape[1]))
+    @staticmethod
+    def clase_mayoritaria(y):
+        valores, counts = np.unique(y, return_counts=True)
+        return valores[np.argmax(counts)]
 
 if __name__ == "__main__":
+    # Datos ficticios: combinamos columnas continuas (floats) y una categórica (enteros distintos a las clases)
+    X = np.array([
+        [2, 5.1, 3.5, 1.4, 0.2],  # Clase 0
+        [3, 4.9, 3.0, 1.4, 0.2],  # Clase 1
+        [1, 4.7, 3.2, 1.3, 0.2],  # Clase 0
+        [2, 4.6, 3.1, 1.5, 0.2],  # Clase 1
+        [3, 5.0, 3.6, 1.4, 0.2],  # Clase 0
+        [1, 5.4, 3.9, 1.7, 0.4],  # Clase 1
+        [2, 4.6, 3.4, 1.4, 0.3],  # Clase 0
+        [3, 5.0, 3.4, 1.5, 0.2],  # Clase 1
+        [1, 4.4, 2.9, 1.4, 0.2],  # Clase 0
+        [3, 4.9, 3.1, 1.5, 0.1],  # Clase 1
+        [1, 5.5, 3.5, 1.3, 0.2],  # Clase 0
+        [2, 5.7, 3.8, 1.7, 0.3],  # Clase 1
+        [1, 5.0, 3.0, 1.6, 0.2],  # Clase 0
+        [2, 5.1, 3.8, 1.9, 0.4],  # Clase 1
+        [1, 5.2, 3.5, 1.5, 0.2],  # Clase 0
+        [2, 5.2, 3.4, 1.4, 0.2],  # Clase 1
+        [1, 4.8, 3.1, 1.6, 0.2],  # Clase 0
+        [2, 5.4, 3.4, 1.5, 0.4],  # Clase 1
+        [1, 5.2, 4.1, 1.5, 0.1],  # Clase 0
+        [2, 5.5, 4.2, 1.4, 0.2],  # Clase 1
+    ])
+
+    # Supongamos que las clases para cada instancia son binarias (0 o 1)
+    y = np.array([0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1])
+
+    # Atributos a considerar para el árbol de decisión (índices de las columnas)
+    atributos = list(range(X.shape[1]))
+
+    # Ajustar los parámetros del árbol
+    profundidad_max = 8
+    minimas_obs_n = 1
+    minimas_obs_h = 1
+    ganancia_minima = 0.0
+
     # Construir el árbol C4.5 con los datos ficticios
-    arbol = ArbolC4_5.construir(X, y, atributos)
-    
+    arbol = ArbolC4_5.construir(X, y, atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima)
+
     # Función para imprimir el árbol de decisión
     def imprimir_arbol(arbol, nivel=0):
         if arbol.es_hoja:

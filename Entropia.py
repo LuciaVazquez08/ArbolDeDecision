@@ -23,7 +23,7 @@ class Entropia:
     
     def gain_ratio(X: np.ndarray, y: np.ndarray, indice_atributo: int) -> float:
         ganancia_informacion = Entropia.ganancia_informacion_atributo(X, y, indice_atributo)
-        split_info = Entropia.split_info(X[:, indice_atributo])
+        split_info = Entropia.split_info(y)
         
         if split_info == 0:
             return 0  # Para evitar la división por cero
