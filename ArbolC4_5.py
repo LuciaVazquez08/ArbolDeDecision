@@ -29,7 +29,7 @@ class ArbolC4_5(Arbol):
     def construir(cls, 
                   X: np.ndarray, 
                   y: np.ndarray, 
-                  atributos: list[int],
+                  indice_atributos: list[int],
                   nombres_atributos: list[str],
                   profundidad_max: int = None, 
                   minimas_obs_n: int = 0, 
@@ -38,29 +38,34 @@ class ArbolC4_5(Arbol):
                   profundidad_actual: int = 0
                   ) -> "ArbolC4_5":
 
-        # Criterios de parada
-        if len(np.unique(y)) == 1:  # Nodo puro
-            hoja = ArbolC4_5(y[0], None, es_hoja=True)
+        # Criterio de parada: Nodo puro 
+        if len(np.unique(y)) == 1:
+            hoja = ArbolC4_5(y[0], atributo=None, es_hoja=True)
+            hoja._num_samples = len(y)
+            return hoja
+            
+        # Criterio de parada: Maxima profundidad
+        if profundidad_max is not None and profundidad_actual >= profundidad_max:
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            hoja = ArbolC4_5(y[0], atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
-        if profundidad_max is not None and profundidad_actual >= profundidad_max:  # Máxima profundidad
-            hoja = ArbolC4_5(y[0], atributo=nombres_atributos[atributos[0]], es_hoja=True)
+        # Criterio de parada: Mínimas observaciones por nodo
+        if minimas_obs_n is not None and len(y) < minimas_obs_n:
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            hoja = ArbolC4_5(y[0], atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
-        if minimas_obs_n is not None and len(y) < minimas_obs_n:  # Mínimas observaciones por nodo
-            hoja = ArbolC4_5(y[0], atributo=nombres_atributos[atributos[0]], es_hoja=True)
-            hoja._num_samples = len(y)
-            return hoja
-        
-        if not atributos:  # Sin atributos para dividir
-            hoja = ArbolC4_5(y[0], None, es_hoja=True)
+        # Criterio de parada: Sin atributos para dividir
+        if not indice_atributos:  
+            hoja = ArbolC4_5(y[0], atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
 
         # Seleccionar el mejor atributo
-        mejor_atributo, mejor_umbral = cls.seleccionar_mejor_atributo(X, y, atributos)
+        mejor_atributo, mejor_umbral = cls.seleccionar_mejor_atributo(X, y, indice_atributos)
 
         # Creamos el árbol con el mejor atributo
         arbol = cls(mejor_atributo)
@@ -74,7 +79,7 @@ class ArbolC4_5(Arbol):
             sub_X_der = X[indices_der]
             sub_y_der = y[indices_der]
 
-            atributos_restantes = atributos.copy()
+            atributos_restantes = indice_atributos.copy()
             atributos_restantes.remove(mejor_atributo)
 
             if minimas_obs_h is not None and minimas_obs_h > len(sub_y_izq):
@@ -89,14 +94,14 @@ class ArbolC4_5(Arbol):
             else:
                 sub_arbol_der = cls.construir(sub_X_der, sub_y_der, atributos_restantes, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
 
-            arbol.hijos[('<=', mejor_umbral)] = sub_arbol_izq
-            arbol.hijos[('>', mejor_umbral)] = sub_arbol_der
+            arbol._hijos[('<=', mejor_umbral)] = sub_arbol_izq
+            arbol._hijos[('>', mejor_umbral)] = sub_arbol_der
 
         else:  # El mejor atributo es categórico
             # Creamos nodos para cada valor del mejor atributo
             for valor in np.unique(X[:, mejor_atributo]):
                 
-                atributos_restantes = atributos.copy()
+                atributos_restantes = indice_atributos.copy()
                 atributos_restantes.remove(mejor_atributo)
             
                 indices = np.where(X[:, mejor_atributo] == valor)[0]
@@ -106,7 +111,7 @@ class ArbolC4_5(Arbol):
                 # Criterio de parada: Mínimas observaciones por hoja
                 if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
                     clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                    subarbol = ArbolC4_5(valor=clase_mayoritaria, atributo=nombres_atributos[atributos[0]], es_hoja=True)
+                    subarbol = ArbolC4_5(sub_y[0], atributo=None, es_hoja=True)
                     subarbol._num_samples = len(sub_y)
                 else:
                     subarbol = cls.construir(sub_X, sub_y, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
@@ -124,7 +129,6 @@ class ArbolC4_5(Arbol):
         if len(conteos) > 0:
         
             top_n = min(top_n, len(conteos))
-
     
             indices_ordenados = np.argsort(conteos)[::-1]
             top_conteos = conteos[indices_ordenados][:top_n]

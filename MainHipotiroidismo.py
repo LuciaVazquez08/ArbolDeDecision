@@ -8,24 +8,24 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_ma
 
 def main():
 
-    df = pd.read_csv("C:/Users/naiar/Downloads/clima.csv")
+    df = pd.read_csv("C:/Users/naiar/Downloads/tratamiento.csv")
 
     print(df)
 
     # Vemos el balance del target 
-    balance = df['decision'].value_counts() 
-    #print(balance)
+    balance = df['AdministrarTratamiento'].value_counts() 
+    print(balance)
 
 
-    X = df.drop(['decision', 'day'], axis=1)
-    y = df[['decision']]
+    X = df.drop(['AdministrarTratamiento', 'Paciente'], axis=1)
+    y = df[['AdministrarTratamiento']]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     #print (X_train.shape, X_test.shape)
 
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = DecisionTreeClassifier(algoritmo = ArbolID3)
+    classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)
     classifier.fit(X_train, y_train)
 
     print(classifier.arbol)

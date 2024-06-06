@@ -24,9 +24,9 @@ class DecisionTreeClassifier:
         X_array = X.values
         y_array = y.values
         if len(X_array) == len(y_array):
-            atributos = list(range(X_array.shape[1]))
+            indice_atributos = list(range(X_array.shape[1]))
             nombres_atributos = X.columns.tolist()
-            self.arbol = self.algoritmo.construir(X_array, y_array, atributos, nombres_atributos, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
+            self.arbol = self.algoritmo.construir(X_array, y_array, indice_atributos, nombres_atributos, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
         else:
             raise ValueError("Debe haber la misma cantidad de instancias en los features y en el target.")
         
