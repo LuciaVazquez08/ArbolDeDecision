@@ -1,4 +1,4 @@
-from Entropia import Entropia
+from Ganancia import Ganancia
 import numpy as np
 from Arbol import Arbol
 from typing import TypeVar
@@ -40,27 +40,29 @@ class ArbolC4_5(Arbol):
 
         # Criterio de parada: Nodo puro 
         if len(np.unique(y)) == 1:
-            hoja = ArbolC4_5(y[0], atributo=None, es_hoja=True)
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
             
         # Criterio de parada: Maxima profundidad
         if profundidad_max is not None and profundidad_actual >= profundidad_max:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolC4_5(y[0], atributo=None, es_hoja=True)
+            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Mínimas observaciones por nodo
         if minimas_obs_n is not None and len(y) < minimas_obs_n:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolC4_5(y[0], atributo=None, es_hoja=True)
+            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Sin atributos para dividir
         if not indice_atributos:  
-            hoja = ArbolC4_5(y[0], atributo=None, es_hoja=True)
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
 
@@ -68,9 +70,15 @@ class ArbolC4_5(Arbol):
         mejor_atributo, mejor_umbral = cls.seleccionar_mejor_atributo(X, y, indice_atributos)
 
         # Creamos el árbol con el mejor atributo
-        arbol = cls(mejor_atributo)
+        arbol = ArbolC4_5(mejor_atributo, atributo=nombres_atributos[mejor_atributo])
+        arbol._num_samples = len(y)
 
-        if mejor_umbral is not None:  # El mejor atributo es continuo
+        # Caso 1: El mejor atributo es continuo
+        if mejor_umbral is not None:  
+
+            atributos_restantes = indice_atributos.copy()
+            atributos_restantes.remove(mejor_atributo)
+
             indices_izq = np.where(X[:, mejor_atributo] <= mejor_umbral)[0]
             indices_der = np.where(X[:, mejor_atributo] > mejor_umbral)[0]
 
@@ -79,26 +87,27 @@ class ArbolC4_5(Arbol):
             sub_X_der = X[indices_der]
             sub_y_der = y[indices_der]
 
-            atributos_restantes = indice_atributos.copy()
-            atributos_restantes.remove(mejor_atributo)
-
-            if minimas_obs_h is not None and minimas_obs_h > len(sub_y_izq):
+            # Criterio de parada: Mínimas observaciones por hoja (no anda)
+            if minimas_obs_h is not None and minimas_obs_h > len(sub_y_izq): 
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y_izq)
-                sub_arbol_izq = cls(clase_mayoritaria, es_hoja=True)
+                subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+                subarbol._num_samples = len(sub_y_izq)
             else:
-                sub_arbol_izq = cls.construir(sub_X_izq, sub_y_izq, atributos_restantes, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
+                sub_arbol_izq = cls.construir(sub_X_izq, sub_y_izq, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
 
-            if minimas_obs_h is not None and minimas_obs_h > len(sub_y_der):
+            # Criterio de parada: Mínimas observaciones por hoja (no anda)
+            if minimas_obs_h is not None and minimas_obs_h > len(sub_y_der): 
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y_der)
-                sub_arbol_der = cls(clase_mayoritaria, es_hoja=True)
+                subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+                subarbol._num_samples = len(sub_y_der)
             else:
-                sub_arbol_der = cls.construir(sub_X_der, sub_y_der, atributos_restantes, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
+                sub_arbol_der = cls.construir(sub_X_der, sub_y_der, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
 
             arbol._hijos[('<=', mejor_umbral)] = sub_arbol_izq
             arbol._hijos[('>', mejor_umbral)] = sub_arbol_der
 
-        else:  # El mejor atributo es categórico
-            # Creamos nodos para cada valor del mejor atributo
+        # Caso 2: El mejor atributo es categórico
+        else:  
             for valor in np.unique(X[:, mejor_atributo]):
                 
                 atributos_restantes = indice_atributos.copy()
@@ -111,7 +120,7 @@ class ArbolC4_5(Arbol):
                 # Criterio de parada: Mínimas observaciones por hoja
                 if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
                     clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                    subarbol = ArbolC4_5(sub_y[0], atributo=None, es_hoja=True)
+                    subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
                     subarbol._num_samples = len(sub_y)
                 else:
                     subarbol = cls.construir(sub_X, sub_y, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
@@ -135,7 +144,6 @@ class ArbolC4_5(Arbol):
 
             proporcion = np.sum(top_conteos) / len(X)
 
-    
             if proporcion >= umbral:
                 tipo_atributo = 'categorico'
 
@@ -156,7 +164,7 @@ class ArbolC4_5(Arbol):
             if tipo_atributo == 'continuo':
                 umbral, ganancia = ArbolC4_5.obtener_umbral_y_gain_ratio(valores_atributo, y)
             else:
-                ganancia = Entropia.ganancia_informacion_atributo(X, y, atributo)
+                ganancia = Ganancia.ganancia_informacion_atributo(X, y, atributo)
                 umbral = None
 
             if ganancia > mejor_ganancia:
@@ -190,7 +198,7 @@ class ArbolC4_5(Arbol):
             X_dividido = np.concatenate((np.zeros(n_izquierda), np.ones(n_derecha)))
             y_dividido = np.concatenate((grupo_1_y, grupo_2_y))
             
-            gain_ratio = Entropia.gain_ratio(X_dividido.reshape(-1, 1), y_dividido, 0)
+            gain_ratio = Ganancia.gain_ratio(X_dividido.reshape(-1, 1), y_dividido, 0)
             
             if gain_ratio > ganancia_maxima:
                 ganancia_maxima = gain_ratio

@@ -1,6 +1,6 @@
 import numpy as np
 from Arbol import Arbol
-from Entropia import Entropia
+from Ganancia import Ganancia
 from typing import TypeVar
 T = TypeVar('T')
 
@@ -11,7 +11,7 @@ class ArbolID3(Arbol):
         self._es_hoja = es_hoja
         self._hijos: dict = {}
         self._atributo_division = atributo
-        self._num_samples = None
+        self._num_samples: int = None
 
     def __str__(self, nivel=0) -> str:
         espacio_indentado = "    " * nivel
@@ -41,45 +41,41 @@ class ArbolID3(Arbol):
         
         # Criterio de parada: Nodo puro 
         if len(np.unique(y)) == 1:
-            hoja = ArbolID3(y[0], atributo=None, es_hoja=True)
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
             
         # Criterio de parada: Maxima profundidad
         if profundidad_max is not None and profundidad_actual >= profundidad_max:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(y[0], atributo=None, es_hoja=True)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Mínimas observaciones por nodo
         if minimas_obs_n is not None and len(y) < minimas_obs_n:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(y[0], atributo=None, es_hoja=True)
-            print(y[0])
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Sin atributos para dividir
         if not indice_atributos:  
-            hoja = ArbolID3(y[0], atributo=None, es_hoja=True)
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Calculamos la ganancia de información de cada atributo
-        ganancias = [Entropia.ganancia_informacion_atributo(X, y, atributo) for atributo in indice_atributos]
+        ganancias = [Ganancia.ganancia_informacion_atributo(X, y, atributo) for atributo in indice_atributos]
 
         # Criterio de parada: Ganancia mínima
         if ganancia_minima is not None and ganancias[np.argmax(ganancias)] < ganancia_minima:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(y[0], atributo=None, es_hoja=True)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
-        
-        if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
-                clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                subarbol = ArbolID3(sub_y[0], atributo=None, es_hoja=True)
-                subarbol._num_samples = len(sub_y)
 
         # Seleccionamos el atributo con mayor ganancia y creamos un arbol con ese atributo
         mejor_atributo = indice_atributos[np.argmax(ganancias)]
@@ -96,10 +92,10 @@ class ArbolID3(Arbol):
             sub_X = X[indices]
             sub_y = y[indices]
 
-            # Criterio de parada: Mínimas observaciones por hoja (no anda)
-            if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
+            # Criterio de parada: Mínimas observaciones por hoja
+            if minimas_obs_h is not None and len(sub_y) < minimas_obs_h:
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                subarbol = ArbolID3(sub_y[0], atributo=None, es_hoja=True)
+                subarbol = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
                 subarbol._num_samples = len(sub_y)
             else:
                 subarbol = cls.construir(sub_X, sub_y, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)

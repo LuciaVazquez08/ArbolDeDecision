@@ -21,8 +21,8 @@ class DecisionTreeClassifier:
         self.arbol = None
 
     def fit(self, X: DataFrame, y: DataFrame) -> None:
-        X_array = X.values
-        y_array = y.values
+        X_array = np.array(X)
+        y_array = np.array(y)
         if len(X_array) == len(y_array):
             indice_atributos = list(range(X_array.shape[1]))
             nombres_atributos = X.columns.tolist()
@@ -31,19 +31,30 @@ class DecisionTreeClassifier:
             raise ValueError("Debe haber la misma cantidad de instancias en los features y en el target.")
         
     def predict(self, X: DataFrame) -> list[list[T]]:
-        X_array = X.values
+        X_array = np.array(X)
         def _predict_instancia(instancia: np.ndarray, nodo_actual: ArbolID3 | ArbolC4_5) -> T:
             if nodo_actual._es_hoja:
-                return nodo_actual.dato.tolist()
+                return nodo_actual.dato
             atributo = nodo_actual.dato
             valor = instancia[atributo]
-            if valor in nodo_actual._hijos:
-                return _predict_instancia(instancia, nodo_actual._hijos[valor])
+
+   
+            
+            # Manejamos las predicciones en donde el atributo es numérico
+            if isinstance(valor, (int, float)):
+                for (operador, umbral), hijo in nodo_actual._hijos.items():
+                    if (operador == '<=' and valor <= umbral) or (operador == '>' and valor > umbral):
+                        return _predict_instancia(instancia, hijo)
+            
+            # Manejamos las predicciones en donde el atributo es categórico
             else:
-                # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
-                clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja] 
-                return [ArbolID3.clase_mayoritaria(np.array(clases))]
-        
+                if valor in nodo_actual._hijos:
+                    return _predict_instancia(instancia, nodo_actual._hijos[valor])
+                else:
+                    # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
+                    clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja] 
+                    return self.algoritmo.clase_mayoritaria(np.array(clases))
+          
         predicciones = [_predict_instancia(instancia, self.arbol) for instancia in X_array]
         return predicciones
 
