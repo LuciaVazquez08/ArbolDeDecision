@@ -1,81 +1,91 @@
 import numpy as np
 from Arbol import Arbol
-from Entropia import Entropia
-from typing import Generic, TypeVar
+from Ganancia import Ganancia
+from typing import TypeVar
 T = TypeVar('T')
 
 class ArbolID3(Arbol):
     
-    def __init__(self, dato, es_hoja: bool = False) -> None:
+    def __init__(self, dato: T, atributo: str = None, es_hoja: bool = False) -> None:
         super().__init__(dato) 
         self._es_hoja = es_hoja
         self._hijos: dict = {}
+        self._atributo_division = atributo
+        self._num_samples: int = None
 
-    def __str__(self):
-        def mostrar(t: ArbolID3, nivel: int):
-            tab = '.' * 4
-            indent = tab * nivel
-            out = indent + str(t.dato) + '\n'
-            for valor, subarbol in t._hijos.items():
-                out += indent + f"Valor: {valor}\n"
-                out += mostrar(subarbol, nivel + 1)
-            return out
-        return mostrar(self, 0)
+    def __str__(self, nivel=0) -> str:
+        espacio_indentado = "    " * nivel
+        if self._es_hoja:
+            return f"{espacio_indentado}[Hoja: {self.dato}, Samples: {self._num_samples}]\n"
+        else:
+            nombre_atributo = self._atributo_division
+            resultado = f"{espacio_indentado}[Atributo: {nombre_atributo}, Samples: {self._num_samples}]\n"
+            for valor, hijo in self._hijos.items():
+                resultado += f"{espacio_indentado}├── Valor: {valor}\n"
+                resultado += hijo.__str__(nivel + 1)
+            return resultado
+
 
     @classmethod
-    # X: dataset convertido en arrays sin la primer columna de atributos
-    # y: columna con las clases
-
-    def construir(cls, X: np.ndarray, y: np.ndarray, 
-                  atributos: list[int],
+    def construir(cls, 
+                  X: np.ndarray, 
+                  y: np.ndarray, 
+                  indice_atributos: list[int],
+                  nombres_atributos: list[str],
                   profundidad_max: int = None, 
                   minimas_obs_n: int = None, 
                   minimas_obs_h: int = None, 
-                  ganancia_minima: float = 0.0, 
+                  ganancia_minima: float = None, 
                   profundidad_actual: int = 0
                   ) -> "ArbolID3":
         
-        # Criterio de parada: Nodo puro (todos los elementos del nodo pertenecen a la misma clase)
+        # Criterio de parada: Nodo puro 
         if len(np.unique(y)) == 1:
-            return ArbolID3(y[0], es_hoja=True)
-        
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja._num_samples = len(y)
+            return hoja
+            
         # Criterio de parada: Maxima profundidad
         if profundidad_max is not None and profundidad_actual >= profundidad_max:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            return ArbolID3(clase_mayoritaria, es_hoja=True)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja._num_samples = len(y)
+            return hoja
         
         # Criterio de parada: Mínimas observaciones por nodo
         if minimas_obs_n is not None and len(y) < minimas_obs_n:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            return ArbolID3(clase_mayoritaria, es_hoja=True)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja._num_samples = len(y)
+            return hoja
         
         # Criterio de parada: Sin atributos para dividir
-        if not atributos:
+        if not indice_atributos:  
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            return ArbolID3(clase_mayoritaria, es_hoja=True)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja._num_samples = len(y)
+            return hoja
         
-        # Seleccionamos el mejor atributo en base a entropía y ganancia de información
-        ganancias = [Entropia.ganancia_informacion_atributo(X, y, atributo) for atributo in atributos]
-        mejor_atributo = atributos[np.argmax(ganancias)]
-        
-        #print(f"Ganancias en profundidad {profundidad_actual}: {ganancias}")
-        #print(f"Mejor atributo en profundidad {profundidad_actual}: {mejor_atributo} con ganancia {ganancias[np.argmax(ganancias)]}")
-        
+        # Calculamos la ganancia de información de cada atributo
+        ganancias = [Ganancia.ganancia_informacion_atributo(X, y, atributo) for atributo in indice_atributos]
+
         # Criterio de parada: Ganancia mínima
         if ganancia_minima is not None and ganancias[np.argmax(ganancias)] < ganancia_minima:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            return ArbolID3(clase_mayoritaria, es_hoja=True)
-        
-        if not atributos:
-            clase_mayoritaria = cls.clase_mayoritaria(y)
-            return ArbolID3(clase_mayoritaria, es_hoja=True)
+            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja._num_samples = len(y)
+            return hoja
 
-        # Creamos el árbol con el mejor atributo
-        arbol = ArbolID3(mejor_atributo)
+        # Seleccionamos el atributo con mayor ganancia y creamos un arbol con ese atributo
+        mejor_atributo = indice_atributos[np.argmax(ganancias)]
+        arbol = ArbolID3(mejor_atributo, atributo=nombres_atributos[mejor_atributo])
+        arbol._num_samples = len(y)
         
         # Creamos nodos para cada valor del mejor atributo
         for valor in np.unique(X[:, mejor_atributo]):
-            atributos_restantes = atributos.copy()
+            
+            atributos_restantes = indice_atributos.copy()
             atributos_restantes.remove(mejor_atributo)
         
             indices = np.where(X[:, mejor_atributo] == valor)[0]
@@ -83,20 +93,27 @@ class ArbolID3(Arbol):
             sub_y = y[indices]
 
             # Criterio de parada: Mínimas observaciones por hoja
-            if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
+            if minimas_obs_h is not None and len(sub_y) < minimas_obs_h:
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                subarbol = ArbolID3(valor=clase_mayoritaria, es_hoja=True)
+                subarbol = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+                subarbol._num_samples = len(sub_y)
             else:
-                subarbol = cls.construir(sub_X, sub_y, atributos_restantes, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
-            
+                subarbol = cls.construir(sub_X, sub_y, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
+                
             arbol._hijos[valor] = subarbol
-        
+
         return arbol
 
     @staticmethod
     def clase_mayoritaria(y: np.ndarray) -> int:
         clases, conteo = np.unique(y, return_counts=True)
         return clases[np.argmax(conteo)]
+    
+    
+        
+        
+    
+
     
         
         

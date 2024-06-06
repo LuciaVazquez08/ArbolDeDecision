@@ -1,29 +1,33 @@
 import pandas as pd
-from ArbolC4_5 import ArbolC4_5
-from RandomForest import RandomForest
+import numpy as np
 from sklearn.model_selection import train_test_split
+from ArbolID3 import ArbolID3
+from ArbolC4_5 import ArbolC4_5
+from DecisionTreeClassifier import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_matrix
 
 
 # Función principal
 def main():
     # Cargar el dataset desde un archivo CSV
-    df = pd.read_csv("C:/Users/naiar/Downloads/star.csv")
+    df = pd.read_csv("C:/Users/naiar/Downloads/heart.csv")
     print(df)
 
     # Vemos el balance del target 
-    balance = df['TargetClass'].value_counts() 
+    balance = df['output'].value_counts() 
     print(balance)
 
-    X = df.drop(['TargetClass', 'SpType'], axis=1)
-    y = df[['TargetClass']]
+    X = df.drop(['output'], axis=1)
+    y = df[['output']]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     print (X_train.shape, X_test.shape)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo = ArbolC4_5)
+    classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)
     classifier.fit(X_train, y_train)
+
+    print(classifier.arbol)
 
     # Evaluamos el modelo
     y_pred = classifier.predict(X_test)
@@ -36,7 +40,6 @@ def main():
     print(f'Precision: {precision}')
     print(f'Recall: {recall}')
     print(f'{matriz}')
-
 
 if __name__ == "__main__":
     main()
