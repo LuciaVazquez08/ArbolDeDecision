@@ -6,12 +6,12 @@ from DecisionTreeClassifier import DecisionTreeClassifier
 from collections import Counter
 
 class RandomForest:
-    def __init__(self, algoritmo: ArbolID3| ArbolC4_5 = ArbolID3, 
+    def __init__(self, algoritmo: str = "ID3", 
                  profundidad_max: int = None,
                  minimas_obs_n: int = None, 
                  minimas_obs_h: int = None, 
                  ganancia_minima: float = None, 
-                 numero_estimadores: int = 5, # cantidad de árboles que queremos construir
+                 numero_estimadores: int = 100,
                  bootstrap: bool = True,
                  feature_selection_method: str = "sqrt"
                 ):
@@ -23,7 +23,7 @@ class RandomForest:
         self.numero_estimadores = numero_estimadores
         self.bootstrap = bootstrap
         self.feature_selection_method = feature_selection_method
-        self.arboles: list[DecisionTreeClassifier] = []  #no se si es necesario que este como atrubuto pero bueno
+        self.arboles: list[DecisionTreeClassifier] = []  
 
     @staticmethod
     def bootstraping(X: np.ndarray , y: np.ndarray, n_estimadores: int) -> list[list[np.ndarray]]:
@@ -62,8 +62,8 @@ class RandomForest:
         return muestras_finales
 
     def fit(self, X: DataFrame, y: DataFrame) -> None:
-        X_array = X.values
-        y_array = y.values
+        X_array = np.asarray(X)
+        y_array = np.array(y)
 
         if len(X_array) == len(y_array):
             if self.bootstrap:
@@ -84,35 +84,59 @@ class RandomForest:
         pred_arboles = []
 
         for arbol in self.arboles:
-            preds = arbol.predict(X)
-            pred_arboles.append(preds)
+            pred = arbol.predict(X)
+            pred_arboles.append(pred)
 
-        preds_finales = []
+        pred_finales = []
         for i in range(len(X)):
             pred_i = [pred[i] for pred in pred_arboles]
-            preds_finales.append(Counter(pred_i).most_common(1)[0][0])
+            pred_finales.append(Counter(pred_i).most_common(1)[0][0])
 
         print(f'Predicciones de cada árbol: {pred_arboles}')
-        print(f'Predicciones finales: {preds_finales}')
-        return preds_finales
+        print(f'Predicciones finales: {pred_finales}')
+        return pred_finales
     
-    def get_params():
-    #TODO: get_params -> devuelve los hiperparametros no nulos    
-        pass
+    def get_params(self):
+        return self.__dict__
 
-    def set_params():
-    #TODO: set_params
-        pass
+    def set_params(self, **params):
+        for key, value in params.items():
+                if hasattr(self,key):
+                    setattr(self,key,value)
+                else:
+                    raise ValueError(f"{key} no es un atributo valido")
 
-    def predict_proba():
-    #TODO: predice las probabilidades de cada clase dado un array de instancias 
-        pass
+    def predict_proba(self, X: DataFrame):
+        n_samples = X.shape[0]
+        cantidades = {c: np.zeros(n_samples) for c in np.unique(self.arboles[0].predict(X))}
 
-    def score():
-    #TODO: devuelve la media de la accuracy+
-        pass
+        for arbol in self.arboles:
+            pred = arbol.predict(X)
+            for i, pred in enumerate(pred):
+                cantidades[pred][i] += 1
 
-    def decision_path():
-    #TODO: decision_path(x)     
-        pass
+        prob = np.zeros((n_samples, len(cantidades)))
+        for i, cls in enumerate(cantidades):
+            prob[:, i] = cantidades[cls] / len(self.arboles)
+        
+        return prob
+
+    def score(self, X,y):
+        X_array = np.asarray(X)
+        y_array = np.asarray(y)
+        if len(X_array) == len(y_array):
+            pred = self.predict(X_array)
+            acc = sum(p == t for p,t in zip(pred,y_array))
+            accuracy = acc / len(y_array)
+            return accuracy
+        else:
+            raise ValueError("Debe haber la cantidad de instancias en los features que en el target")
+
+    def decision_path(self, X: DataFrame):
+        paths = []
+
+        for arbol in self.arboles:
+            paths.append(arbol.decision_path(X)) 
+
+        return paths
     
