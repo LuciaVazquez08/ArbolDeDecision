@@ -148,6 +148,7 @@ class ArbolC4_5(Arbol):
                 tipo_atributo = 'categorico'
 
         return tipo_atributo
+    
 
     @staticmethod
     def seleccionar_mejor_atributo(X, y, atributos):
@@ -158,7 +159,6 @@ class ArbolC4_5(Arbol):
         for atributo in atributos:
             valores_atributo = X[:, atributo]
 
-            # Verificar el tipo de atributo 
             tipo_atributo = ArbolC4_5.determinar_tipo_atributo(valores_atributo)
 
             if tipo_atributo == 'continuo':
@@ -172,7 +172,7 @@ class ArbolC4_5(Arbol):
                 mejor_atributo = atributo
                 mejor_umbral = umbral
 
-        return mejor_atributo, mejor_umbral
+        return mejor_atributo, round(mejor_umbral, 2)
 
     @staticmethod
     def obtener_umbral_y_gain_ratio(atributo_continuo, y):

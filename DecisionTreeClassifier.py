@@ -33,27 +33,29 @@ class DecisionTreeClassifier:
     def predict(self, X: DataFrame) -> list[list[T]]:
         X_array = np.array(X)
         def _predict_instancia(instancia: np.ndarray, nodo_actual: ArbolID3 | ArbolC4_5) -> T:
+
             if nodo_actual._es_hoja:
                 return nodo_actual.dato
             atributo = nodo_actual.dato
             valor = instancia[atributo]
+            tipo_atributo = ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo])
 
-   
-            
             # Manejamos las predicciones en donde el atributo es numérico
-            if isinstance(valor, (int, float)):
+            if tipo_atributo == 'continuo':
                 for (operador, umbral), hijo in nodo_actual._hijos.items():
                     if (operador == '<=' and valor <= umbral) or (operador == '>' and valor > umbral):
                         return _predict_instancia(instancia, hijo)
             
             # Manejamos las predicciones en donde el atributo es categórico
-            else:
+            elif tipo_atributo == 'categorico':
                 if valor in nodo_actual._hijos:
                     return _predict_instancia(instancia, nodo_actual._hijos[valor])
                 else:
                     # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
                     clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja] 
                     return self.algoritmo.clase_mayoritaria(np.array(clases))
+            else:
+                raise ValueError("Tipo de atributo desconocido")
           
         predicciones = [_predict_instancia(instancia, self.arbol) for instancia in X_array]
         return predicciones

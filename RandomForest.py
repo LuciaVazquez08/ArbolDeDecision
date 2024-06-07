@@ -11,7 +11,7 @@ class RandomForest:
                  minimas_obs_n: int = None, 
                  minimas_obs_h: int = None, 
                  ganancia_minima: float = None, 
-                 numero_estimadores: int = 5, # cantidad de árboles que queremos construir
+                 numero_estimadores: int = 100, # cantidad de árboles que queremos construir
                  bootstrap: bool = True,
                  feature_selection_method: str = "sqrt"
                 ):

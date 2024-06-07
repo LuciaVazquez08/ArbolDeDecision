@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_ma
 # Función principal
 def main():
     # Cargar el dataset desde un archivo CSV
-    df = pd.read_csv("C:/Users/naiar/Downloads/heart.csv")
+    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/heart.csv")
     print(df)
 
     # Vemos el balance del target 
@@ -28,7 +28,7 @@ def main():
     classifier.fit(X_train, y_train)
 
     print(classifier.arbol)
-
+    
     # Evaluamos el modelo
     y_pred = classifier.predict(X_test)
 
