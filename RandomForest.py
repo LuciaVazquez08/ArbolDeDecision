@@ -5,7 +5,7 @@ from ArbolC4_5 import ArbolC4_5
 from DecisionTreeClassifier import DecisionTreeClassifier
 from collections import Counter
 
-class RandomForest:
+class RandomForestClassifier:
     def __init__(self, algoritmo: str = "ID3", 
                  profundidad_max: int = None,
                  minimas_obs_n: int = None, 
