@@ -1,6 +1,7 @@
 import pandas as pd
+import os
 from ArbolC4_5 import ArbolC4_5
-from RandomForest import RandomForest
+from RandomForest import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_matrix
 
@@ -8,7 +9,9 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_ma
 # Función principal
 def main():
     # Cargar el dataset desde un archivo CSV
-    df = pd.read_csv("C:/Users/naiar/Downloads/star.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/star.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     # Vemos el balance del target 
@@ -22,7 +25,7 @@ def main():
     print (X_train.shape, X_test.shape)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo = ArbolC4_5)
+    classifier = RandomForestClassifier(algoritmo = "C4.5")
     classifier.fit(X_train, y_train)
 
     # Evaluamos el modelo

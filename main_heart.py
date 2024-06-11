@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 from sklearn.model_selection import train_test_split
 from ArbolID3 import ArbolID3
 from ArbolC4_5 import ArbolC4_5
@@ -10,7 +11,9 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_ma
 # Función principal
 def main():
     # Cargar el dataset desde un archivo CSV
-    df = pd.read_csv("C:/Users/naiar/Downloads/heart.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/heart.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     # Vemos el balance del target 
@@ -24,7 +27,7 @@ def main():
     print (X_train.shape, X_test.shape)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)
+    classifier = DecisionTreeClassifier(algoritmo="C4.5")
     classifier.fit(X_train, y_train)
 
     print(classifier.arbol)

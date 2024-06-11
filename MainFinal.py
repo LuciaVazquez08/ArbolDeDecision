@@ -1,8 +1,9 @@
 import pandas as pd
+import os
 from ArbolC4_5 import ArbolC4_5
 from ArbolID3 import ArbolID3
 from DecisionTreeClassifier import DecisionTreeClassifier
-from RandomForest import RandomForest
+from RandomForest import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_matrix
 
@@ -39,7 +40,9 @@ def main_interactivo():
 
 def id3_DecisionTree():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/Downloads/tratamiento.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/tratamiento.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     # Vemos el balance del target 
@@ -52,7 +55,7 @@ def id3_DecisionTree():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = DecisionTreeClassifier(algoritmo=ArbolID3)
+    classifier = DecisionTreeClassifier(algoritmo="ID3")
     classifier.fit(X_train, y_train)
 
     print(classifier.arbol)
@@ -72,7 +75,9 @@ def id3_DecisionTree():
 
 def c45_DecisionTree():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/Downloads/star.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/star.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     # Vemos el balance del target 
@@ -85,7 +90,7 @@ def c45_DecisionTree():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = DecisionTreeClassifier(algoritmo = ArbolC4_5)
+    classifier = DecisionTreeClassifier(algoritmo = "C4.5")
     classifier.fit(X_train, y_train)
 
     print(classifier.arbol)
@@ -105,12 +110,13 @@ def c45_DecisionTree():
 
 def id3_RandomForest():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/Downloads/tratamiento.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/tratamiento.csv")
+    df = pd.read_csv(ruta_archivo)
 
     # Vemos el balance del target 
     balance = df['AdministrarTratamiento'].value_counts() 
     print(balance)
-
 
     X = df.drop(['AdministrarTratamiento', 'Paciente'], axis=1)
     y = df[['AdministrarTratamiento']]
@@ -118,7 +124,7 @@ def id3_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo=ArbolID3)
+    classifier = RandomForestClassifier(algoritmo="ID3")
     classifier.fit(X_train, y_train)
 
     # Evaluamos el modelo
@@ -136,7 +142,9 @@ def id3_RandomForest():
 
 def c45_RandomForest():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/Downloads/star.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/star.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     # Vemos el balance del target 
@@ -149,7 +157,7 @@ def c45_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo = ArbolC4_5)
+    classifier = RandomForestClassifier(algoritmo = "C4.5")
     classifier.fit(X_train, y_train)
 
     # Evaluamos el modelo

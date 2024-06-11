@@ -39,7 +39,7 @@ class DecisionTreeClassifier:
         X_array = np.asarray(X)
         def _predict_instancia(instancia: np.ndarray, nodo_actual: ArbolID3 | ArbolC4_5) -> T:
             if nodo_actual._es_hoja:
-                return nodo_actual.dato
+                return nodo_actual.label
             atributo = nodo_actual.dato
             valor = instancia[atributo]
             
@@ -55,7 +55,7 @@ class DecisionTreeClassifier:
                     return _predict_instancia(instancia, nodo_actual._hijos[valor])
                 else:
                     # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
-                    clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja]
+                    clases = [nodo.label for nodo in nodo_actual._hijos.values() if nodo._es_hoja]
                     if self.algoritmo == "ID3":
                         return ArbolID3.clase_mayoritaria(np.asarray(clases))
                     else:

@@ -4,6 +4,7 @@ from ArbolID3 import ArbolID3
 from ArbolC4_5 import ArbolC4_5
 from DecisionTreeClassifier import DecisionTreeClassifier
 from collections import Counter
+from Balanceo import Balanceo
 
 class RandomForestClassifier:
     def __init__(self, algoritmo: str = "ID3", 
@@ -11,9 +12,11 @@ class RandomForestClassifier:
                  minimas_obs_n: int = None, 
                  minimas_obs_h: int = None, 
                  ganancia_minima: float = None, 
-                 numero_estimadores: int = 100,
+                 numero_estimadores: int = 5,
                  bootstrap: bool = True,
-                 feature_selection_method: str = "sqrt"
+                 feature_selection_method: str = "sqrt",
+                 tecnica_balanceo: str = None,
+                 class_weight: str | dict = None
                 ):
         self.algoritmo = algoritmo
         self.profundidad_max = profundidad_max
@@ -23,7 +26,13 @@ class RandomForestClassifier:
         self.numero_estimadores = numero_estimadores
         self.bootstrap = bootstrap
         self.feature_selection_method = feature_selection_method
+        self.class_weight = class_weight
+        self.tecnica_balanceo = tecnica_balanceo
         self.arboles: list[DecisionTreeClassifier] = []  
+    
+    @staticmethod
+    def balancear(X: np.ndarray, y: np.ndarray, weights: dict) -> tuple(np.ndarray, np.ndarray):
+        return X_balanceado, y_balanceado
 
     @staticmethod
     def bootstraping(X: np.ndarray , y: np.ndarray, n_estimadores: int) -> list[list[np.ndarray]]:
@@ -66,12 +75,39 @@ class RandomForestClassifier:
         y_array = np.array(y)
 
         if len(X_array) == len(y_array):
+            if self.class_weight:
+                if self.class_weight == "balanced":
+                    pesos = {}
+                    total_obs = len(y_array)
+                    clases = y_array.unique()
+                    cantidad = len(clases)
+                    for clase in clases:
+                        obs_clase = np.count_nonzero(y_array == clase)
+                        pesos[clase] = total_obs / (cantidad * obs_clase)
+                    X_array, y_array = RandomForestClassifier.balancear(X_array,y_array,pesos)
+                elif self.class_weight.isinstance(dict):
+                    X_array,y_array = RandomForestClassifier.balancear(X_array,y_array, self.class_weight)
+                else:
+                    ValueError("Las opciones son balanceado o un diccionario con porcentajes")
+            if self.tecnica_balanceo:
+                if self.tecnica_balanceo == "RandomUnder":
+                    pass
+                elif self.tecnica_balanceo == "RandomOver":
+                    pass
+                elif self.tecnica_balanceo == "TomekLinks":
+                    X_array, y_array = Balanceo.tomek_links(X_array,y_array)
+                elif self.tecnica_balanceo == "SMOTE":
+                    X_array, y_array = Balanceo.smote(X_array,y_array)
+                elif self.tecnica_balanceo == "NearMiss":
+                    X_array, y_array = Balanceo.nearmiss(X_array,y_array)
+                else:
+                    raise ValueError("las opciones validas son RandomUnder, RandomOver, TomekLinks, SMOTE y Nearmiss")
             if self.bootstrap:
-                muestras = RandomForest.bootstraping(X_array, y_array, self.numero_estimadores)
+                muestras = RandomForestClassifier.bootstraping(X_array, y_array, self.numero_estimadores)
             else:
                 muestras = [[X_array, y_array] for _ in range(self.numero_estimadores)]
                         
-            muestras = RandomForest.random_feature_selection(muestras, feature_selection_method=self.feature_selection_method)
+            muestras = RandomForestClassifier.random_feature_selection(muestras, feature_selection_method=self.feature_selection_method)
 
             for n in range(self.numero_estimadores):
                 arbol = DecisionTreeClassifier(self.algoritmo, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)

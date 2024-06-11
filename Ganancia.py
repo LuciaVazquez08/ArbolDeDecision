@@ -1,7 +1,6 @@
 from abc import ABC
 import numpy as np
 
-
 class Ganancia(ABC):
 
     @staticmethod 
