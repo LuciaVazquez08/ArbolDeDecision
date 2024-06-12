@@ -6,15 +6,21 @@ class Balanceo:
         return np.linalg.norm(x1 - x2)
 
     @staticmethod
-    def random_undersample(X, y):
+    def random_undersample(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
         target_classes = np.unique(y)
         keep_indices = []
         state = np.random.RandomState(42)
+
+        size = None
+        for target in target_classes:
+            tamaño = len(y == target)
+            if tamaño > size:
+                size = min(size,tamaño)
         
         for target_class in target_classes:
             target_indices = np.where(y == target_class)[0]
             
-            keep_index = state.choice(target_indices)
+            keep_index = state.choice(target_indices, size = size)
             keep_indices.append(keep_index)
         
         filtered_X = X[keep_indices]
