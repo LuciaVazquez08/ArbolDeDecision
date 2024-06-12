@@ -157,7 +157,7 @@ def c45_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForestClassifier(algoritmo = "C4.5")
+    classifier = RandomForestClassifier(algoritmo = "C4.5", tecnica_balanceo="RandomUnder")
     classifier.fit(X_train, y_train)
 
     # Evaluamos el modelo

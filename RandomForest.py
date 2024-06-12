@@ -31,8 +31,8 @@ class RandomForestClassifier:
         self.arboles: list[DecisionTreeClassifier] = []  
     
     @staticmethod
-    def balancear(X: np.ndarray, y: np.ndarray, weights: dict) -> tuple(np.ndarray, np.ndarray):
-        return X_balanceado, y_balanceado
+    def balancear(X: np.ndarray, y: np.ndarray, weights: dict) -> str:
+        return ""
 
     @staticmethod
     def bootstraping(X: np.ndarray , y: np.ndarray, n_estimadores: int) -> list[list[np.ndarray]]:
@@ -91,9 +91,9 @@ class RandomForestClassifier:
                     ValueError("Las opciones son balanceado o un diccionario con porcentajes")
             if self.tecnica_balanceo:
                 if self.tecnica_balanceo == "RandomUnder":
-                    pass
+                    X_array, y_array = Balanceo.random_undersample(X_array,y_array)
                 elif self.tecnica_balanceo == "RandomOver":
-                    pass
+                    X_array, y_array = Balanceo.random_oversample(X_array,y_array)
                 elif self.tecnica_balanceo == "TomekLinks":
                     X_array, y_array = Balanceo.tomek_links(X_array,y_array)
                 elif self.tecnica_balanceo == "SMOTE":
