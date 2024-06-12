@@ -1,6 +1,7 @@
 import numpy as np
 from collections import defaultdict
 class Balanceo:
+    @staticmethod
     def calcular_distancia(x1, x2):
         return np.linalg.norm(x1 - x2)
 
@@ -63,7 +64,7 @@ class Balanceo:
                         class_indices = np.where(y == class_label)[0]
                         class_samples = X[class_indices]
                         for class_sample in class_samples:
-                            distance = calcular_distancia(minority_sample, class_sample)
+                            distance = Balanceo.calcular_distancia(minority_sample, class_sample)
                             if distance < min_dist:
                                 min_dist = distance
                                 min_dist_idx = i
@@ -93,7 +94,7 @@ class Balanceo:
                         class_indices = np.where(y == class_label)[0]
                         class_samples = X[class_indices]
                         for class_sample in class_samples:
-                            distance = calcular_distancia(minority_sample, class_sample)
+                            distance = Balanceo.calcular_distancia(minority_sample, class_sample)
                             distances.append((distance, class_label))
                 
                 distances.sort()
@@ -136,7 +137,7 @@ class Balanceo:
                         class_indices = np.where(y == class_label)[0]
                         class_samples = X[class_indices]
                         for class_sample in class_samples:
-                            distance = calcular_distancia(minority_sample, class_sample)
+                            distance = Balanceo.calcular_distancia(minority_sample, class_sample)
                             distances.append((distance, class_label))
                 
                 distances.sort()
