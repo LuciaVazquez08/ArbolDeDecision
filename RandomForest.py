@@ -29,10 +29,6 @@ class RandomForestClassifier:
         self.class_weight = class_weight
         self.tecnica_balanceo = tecnica_balanceo
         self.arboles: list[DecisionTreeClassifier] = []  
-    
-    @staticmethod
-    def balancear(X: np.ndarray, y: np.ndarray, weights: dict) -> str:
-        return ""
 
     @staticmethod
     def bootstraping(X: np.ndarray , y: np.ndarray, n_estimadores: int) -> list[list[np.ndarray]]:
@@ -67,28 +63,13 @@ class RandomForestClassifier:
             choices = sorted(choices)
             x_selec = muestra[0][:, choices]
             muestras_finales.append([x_selec, muestra[1]])
-        
         return muestras_finales
 
     def fit(self, X: DataFrame, y: DataFrame) -> None:
         X_array = np.asarray(X)
-        y_array = np.array(y)
+        y_array = np.asarray(y)
 
         if len(X_array) == len(y_array):
-            if self.class_weight:
-                if self.class_weight == "balanced":
-                    pesos = {}
-                    total_obs = len(y_array)
-                    clases = y_array.unique()
-                    cantidad = len(clases)
-                    for clase in clases:
-                        obs_clase = np.count_nonzero(y_array == clase)
-                        pesos[clase] = total_obs / (cantidad * obs_clase)
-                    X_array, y_array = RandomForestClassifier.balancear(X_array,y_array,pesos)
-                elif self.class_weight.isinstance(dict):
-                    X_array,y_array = RandomForestClassifier.balancear(X_array,y_array, self.class_weight)
-                else:
-                    ValueError("Las opciones son balanceado o un diccionario con porcentajes")
             if self.tecnica_balanceo:
                 if self.tecnica_balanceo == "RandomUnder":
                     X_array, y_array = Balanceo.random_undersample(X_array,y_array)

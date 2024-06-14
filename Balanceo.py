@@ -1,5 +1,8 @@
 import numpy as np
+import os
+import pandas as pd
 from collections import defaultdict
+
 class Balanceo:
     @staticmethod
     def calcular_distancia(x1, x2):
@@ -11,46 +14,44 @@ class Balanceo:
         keep_indices = []
         state = np.random.RandomState(42)
 
-        size = None
-        for target in target_classes:
-            tamaño = len(y == target)
-            if tamaño > size:
-                size = min(size,tamaño)
+        size = np.inf
+        for target_class in target_classes:
+            class_indices = np.where(y == target_class)[0]
+            class_size = len(class_indices)
+            if class_size < size:
+                size = class_size
         
         for target_class in target_classes:
             target_indices = np.where(y == target_class)[0]
-            
-            keep_index = state.choice(target_indices, size = size)
-            keep_indices.append(keep_index)
+            keep_index = state.choice(target_indices, size=size, replace=False)
+            keep_indices.extend(keep_index)
         
-        filtered_X = X[keep_indices]
-        filtered_y = y[keep_indices]
+        filtered_X = X[keep_indices, :]
+        filtered_y = y[keep_indices, :]
         
         return filtered_X, filtered_y
 
     def random_oversample(X, y, target_classes=None, oversampling_ratio=1.0):
         target_classes = np.unique(y)
-        oversample_indices = []
+        keep_indices = []
         state = np.random.RandomState(42)
+
+        size = -np.inf
+        for target_class in target_classes:
+            class_indices = np.where(y == target_class)[0]
+            class_size = len(class_indices)
+            if class_size > size:
+                size = class_size
         
         for target_class in target_classes:
             target_indices = np.where(y == target_class)[0]
-            
-            target_samples_count = len(target_indices)
-            synthetic_samples_count = int(target_samples_count * oversampling_ratio) - target_samples_count
-            
-            if synthetic_samples_count <= 0:
-                continue
-            
-            synthetic_indices = state.choice(target_indices, synthetic_samples_count)
-            oversample_indices.extend(synthetic_indices)
+            keep_index = state.choice(target_indices, size=size, replace=True)
+            keep_indices.extend(keep_index)
         
-        sampled_indices = np.concatenate((np.arange(len(X)), oversample_indices))
+        filtered_X = X[keep_indices, :]
+        filtered_y = y[keep_indices, :]
         
-        sampled_X = X[sampled_indices]
-        sampled_y = y[sampled_indices]
-        
-        return sampled_X, sampled_y
+        return filtered_X, filtered_y
     
     @staticmethod
     def tomek_links(X, y):
@@ -160,3 +161,21 @@ class Balanceo:
         synthetic_y = np.hstack((y, np.array(synthetic_y)))
         
         return synthetic_X, synthetic_y
+
+if __name__ == "__main__":
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/tratamiento.csv")
+    df = pd.read_csv(ruta_archivo)
+
+    balance = df['AdministrarTratamiento'].value_counts() 
+    print(balance)
+
+    X = df.drop(['AdministrarTratamiento', 'Paciente'], axis=1)
+    y = df[['AdministrarTratamiento']]
+
+    balanceo = Balanceo()
+
+    x_val, y_val = balanceo.random_undersample(X,y)
+
+    print(y_val.value_counts())
+
