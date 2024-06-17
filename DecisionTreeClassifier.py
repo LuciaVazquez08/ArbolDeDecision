@@ -11,13 +11,17 @@ class DecisionTreeClassifier:
                  profundidad_max: int = None,
                  minimas_obs_n: int = None, 
                  minimas_obs_h: int = None, 
-                 ganancia_minima: float = 0.0, 
+                 ganancia_minima: float = None, 
+                 top_atributos: int = 3,
+                 umbral: float = 0.8
                 ):
         self.algoritmo = algoritmo
         self.profundidad_max = profundidad_max
         self.minimas_obs_n = minimas_obs_n
         self.minimas_obs_h = minimas_obs_h
         self.ganancia_minima = ganancia_minima
+        self.top_atributos = top_atributos
+        self.umbral = umbral
         self.arbol = None
 
     def fit(self, X: DataFrame, y: DataFrame) -> None:
@@ -26,26 +30,29 @@ class DecisionTreeClassifier:
         if len(X_array) == len(y_array):
             indice_atributos = list(range(X_array.shape[1]))
             nombres_atributos = X.columns.tolist()
-            self.arbol = self.algoritmo.construir(X_array, y_array, indice_atributos, nombres_atributos, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
+            tipos_atributos = [ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo], self.top_atributos, self.umbral) for atributo in indice_atributos]
+            self.arbol = self.algoritmo.construir(X_array, y_array, tipos_atributos, indice_atributos, nombres_atributos, 
+                                                  self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
         else:
             raise ValueError("Debe haber la misma cantidad de instancias en los features y en el target.")
         
-    def predict(self, X: DataFrame) -> list[list[T]]:
+    def predict(self, X: DataFrame) -> list[T]:
         X_array = np.array(X)
-        def _predict_instancia(instancia: np.ndarray, nodo_actual: ArbolID3 | ArbolC4_5) -> T:
+        def _predict_instancia(instancia: np.ndarray, nodo_actual: self.algoritmo) -> T:
 
             if nodo_actual._es_hoja:
                 return nodo_actual.dato
+            
             atributo = nodo_actual.dato
             valor = instancia[atributo]
-            tipo_atributo = ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo])
+            tipo_atributo = ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo], self.top_atributos, self.umbral)
 
             # Manejamos las predicciones en donde el atributo es numérico
             if tipo_atributo == 'continuo':
                 for (operador, umbral), hijo in nodo_actual._hijos.items():
                     if (operador == '<=' and valor <= umbral) or (operador == '>' and valor > umbral):
                         return _predict_instancia(instancia, hijo)
-            
+                   
             # Manejamos las predicciones en donde el atributo es categórico
             elif tipo_atributo == 'categorico':
                 if valor in nodo_actual._hijos:
@@ -54,6 +61,7 @@ class DecisionTreeClassifier:
                     # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
                     clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja] 
                     return self.algoritmo.clase_mayoritaria(np.array(clases))
+                
             else:
                 raise ValueError("Tipo de atributo desconocido")
           

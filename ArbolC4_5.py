@@ -10,7 +10,7 @@ class ArbolC4_5(Arbol):
         super().__init__(dato) 
         self._es_hoja = es_hoja
         self._hijos = {}
-        self._atributo_division = atributo
+        self._atributo = atributo
         self._num_samples = None
 
     def __str__(self, nivel=0) -> str:
@@ -18,17 +18,19 @@ class ArbolC4_5(Arbol):
         if self._es_hoja:
             return f"{espacio_indentado}[Hoja: {self.dato}, Samples: {self._num_samples}]\n"
         else:
-            nombre_atributo = self._atributo_division
+            nombre_atributo = self._atributo
             resultado = f"{espacio_indentado}[Atributo: {nombre_atributo}, Samples: {self._num_samples}]\n"
             for valor, hijo in self._hijos.items():
                 resultado += f"{espacio_indentado}├── Valor: {valor}\n"
                 resultado += hijo.__str__(nivel + 1)
             return resultado
+        
 
     @classmethod
     def construir(cls, 
                   X: np.ndarray, 
                   y: np.ndarray, 
+                  tipos_atributos: list[str],
                   indice_atributos: list[int],
                   nombres_atributos: list[str],
                   profundidad_max: int = None, 
@@ -37,7 +39,7 @@ class ArbolC4_5(Arbol):
                   ganancia_minima: float = 0.0, 
                   profundidad_actual: int = 0
                   ) -> "ArbolC4_5":
-
+        
         # Criterio de parada: Nodo puro 
         if len(np.unique(y)) == 1:
             clase_mayoritaria = cls.clase_mayoritaria(y)
@@ -67,7 +69,7 @@ class ArbolC4_5(Arbol):
             return hoja
 
         # Seleccionar el mejor atributo
-        mejor_atributo, mejor_umbral = cls.seleccionar_mejor_atributo(X, y, indice_atributos)
+        mejor_atributo, mejor_umbral = cls.seleccionar_mejor_atributo(X, y, tipos_atributos, indice_atributos)
 
         # Creamos el árbol con el mejor atributo
         arbol = ArbolC4_5(mejor_atributo, atributo=nombres_atributos[mejor_atributo])
@@ -93,7 +95,7 @@ class ArbolC4_5(Arbol):
                 subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
                 subarbol._num_samples = len(sub_y_izq)
             else:
-                sub_arbol_izq = cls.construir(sub_X_izq, sub_y_izq, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
+                sub_arbol_izq = cls.construir(sub_X_izq, sub_y_izq, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
 
             # Criterio de parada: Mínimas observaciones por hoja (no anda)
             if minimas_obs_h is not None and minimas_obs_h > len(sub_y_der): 
@@ -101,7 +103,7 @@ class ArbolC4_5(Arbol):
                 subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
                 subarbol._num_samples = len(sub_y_der)
             else:
-                sub_arbol_der = cls.construir(sub_X_der, sub_y_der, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
+                sub_arbol_der = cls.construir(sub_X_der, sub_y_der, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
 
             arbol._hijos[('<=', mejor_umbral)] = sub_arbol_izq
             arbol._hijos[('>', mejor_umbral)] = sub_arbol_der
@@ -123,43 +125,21 @@ class ArbolC4_5(Arbol):
                     subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
                     subarbol._num_samples = len(sub_y)
                 else:
-                    subarbol = cls.construir(sub_X, sub_y, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
+                    subarbol = cls.construir(sub_X, sub_y, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
                     
                 arbol._hijos[valor] = subarbol
-
         return arbol
-
-    @staticmethod
-    def determinar_tipo_atributo(X: np.ndarray, top_n: int = 3, umbral: float = 0.8) -> str:
-        tipo_atributo = 'continuo'  
-
-        valores_unicos, conteos = np.unique(X, return_counts=True)
-        
-        if len(conteos) > 0:
-        
-            top_n = min(top_n, len(conteos))
-    
-            indices_ordenados = np.argsort(conteos)[::-1]
-            top_conteos = conteos[indices_ordenados][:top_n]
-
-            proporcion = np.sum(top_conteos) / len(X)
-
-            if proporcion >= umbral:
-                tipo_atributo = 'categorico'
-
-        return tipo_atributo
     
 
     @staticmethod
-    def seleccionar_mejor_atributo(X, y, atributos):
+    def seleccionar_mejor_atributo(X, y, tipos_atributos, atributos):
         mejor_ganancia = -np.inf
         mejor_atributo = None
         mejor_umbral = None
 
-        for atributo in atributos:
+        for atributo in atributos:      
             valores_atributo = X[:, atributo]
-
-            tipo_atributo = ArbolC4_5.determinar_tipo_atributo(valores_atributo)
+            tipo_atributo = tipos_atributos[atributo]
 
             if tipo_atributo == 'continuo':
                 umbral, ganancia = ArbolC4_5.obtener_umbral_y_gain_ratio(valores_atributo, y)
@@ -172,7 +152,23 @@ class ArbolC4_5(Arbol):
                 mejor_atributo = atributo
                 mejor_umbral = umbral
 
-        return mejor_atributo, round(mejor_umbral, 2)
+        return mejor_atributo, mejor_umbral
+    
+    
+    @staticmethod
+    def determinar_tipo_atributo(atributo: np.ndarray, top_n: int, umbral: float) -> str:
+        valores_unicos, conteos = np.unique(atributo, return_counts=True)
+
+        # Si la proporción de los top_n valores es alta, se considera categórico
+        top_n = min(top_n, len(conteos))
+        indices_ordenados = np.argsort(conteos)[::-1]
+        top_conteos = conteos[indices_ordenados][:top_n]
+        proporcion = np.sum(top_conteos) / len(atributo)
+
+        if proporcion >= umbral:
+            return 'categorico'
+        else:
+            return 'continuo'    
 
     @staticmethod
     def obtener_umbral_y_gain_ratio(atributo_continuo, y):

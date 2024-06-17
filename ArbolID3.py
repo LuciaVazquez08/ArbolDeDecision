@@ -30,6 +30,7 @@ class ArbolID3(Arbol):
     def construir(cls, 
                   X: np.ndarray, 
                   y: np.ndarray, 
+                  tipos_atributos: list[str],
                   indice_atributos: list[int],
                   nombres_atributos: list[str],
                   profundidad_max: int = None, 
@@ -98,7 +99,7 @@ class ArbolID3(Arbol):
                 subarbol = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
                 subarbol._num_samples = len(sub_y)
             else:
-                subarbol = cls.construir(sub_X, sub_y, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
+                subarbol = cls.construir(sub_X, sub_y, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
                 
             arbol._hijos[valor] = subarbol
 
@@ -108,6 +109,8 @@ class ArbolID3(Arbol):
     def clase_mayoritaria(y: np.ndarray) -> int:
         clases, conteo = np.unique(y, return_counts=True)
         return clases[np.argmax(conteo)]
+    
+
     
     
         

@@ -4,7 +4,9 @@ from sklearn.model_selection import train_test_split
 from ArbolID3 import ArbolID3
 from ArbolC4_5 import ArbolC4_5
 from DecisionTreeClassifier import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+
+from RandomForest import RandomForest
 
 
 # Función principal
@@ -24,22 +26,26 @@ def main():
     print (X_train.shape, X_test.shape)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
+    #classifier = RandomForest(algoritmo=ArbolC4_5, numero_estimadores=5)
     classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)
     classifier.fit(X_train, y_train)
-
-    print(classifier.arbol)
     
     # Evaluamos el modelo
     y_pred = classifier.predict(X_test)
 
+    y_pred = classifier.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
-    precision = recall_score(y_test, y_pred, average= 'weighted')
-    recall = f1_score(y_test, y_pred, average= 'weighted')
+    precision = precision_score(y_test, y_pred, average= 'weighted')
+    recall = recall_score(y_test, y_pred, average= 'weighted')
+    f1 = f1_score(y_test, y_pred, average= 'weighted')
     matriz = confusion_matrix(y_test, y_pred)
     print(f'Accuracy: {accuracy}')
     print(f'Precision: {precision}')
     print(f'Recall: {recall}')
+    print(f'F1-score: {f1}')
     print(f'{matriz}')
 
 if __name__ == "__main__":
     main()
+
+    

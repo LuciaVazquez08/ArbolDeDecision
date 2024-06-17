@@ -57,7 +57,7 @@ def id3_DecisionTree():
     classifier = DecisionTreeClassifier(algoritmo=ArbolID3)
     classifier.fit(X_train, y_train)
     print(classifier.arbol)
-    
+
     input("Ahora vamos a ver las métricas:")
 
     # Evaluamos el modelo
@@ -135,8 +135,9 @@ def id3_RandomForest():
     y = df[['AdministrarTratamiento']]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo=ArbolID3, numero_estimadores=5)
+    forest = RandomForest(algoritmo=ArbolID3, numero_estimadores=5, feature_selection_method='sqrt')
     forest.fit(X_train, y_train)
 
     input("Ahora vamos a ver las métricas de nuestro RandomForest:")
@@ -171,13 +172,13 @@ def c45_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo = ArbolC4_5, numero_estimadores=5)
-    classifier.fit(X_train, y_train)
+    forest = RandomForest(algoritmo = ArbolC4_5, numero_estimadores=5, feature_selection_method='sqrt')
+    forest.fit(X_train, y_train)
 
     input("Ahora vamos a ver las métricas de nuestro RandomForest:")
 
     # Evaluamos el modelo
-    y_pred = classifier.predict(X_test)
+    y_pred = forest.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred, average= 'weighted')
     recall = recall_score(y_test, y_pred, average= 'weighted')

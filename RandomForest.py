@@ -10,8 +10,10 @@ class RandomForest:
                  profundidad_max: int = None,
                  minimas_obs_n: int = None, 
                  minimas_obs_h: int = None, 
-                 ganancia_minima: float = None, 
-                 numero_estimadores: int = 100, # cantidad de árboles que queremos construir
+                 ganancia_minima: float = None,
+                 top_atributos: int = 3,
+                 umbral: float = 0.8, 
+                 numero_estimadores: int = 100, 
                  bootstrap: bool = True,
                  feature_selection_method: str = "sqrt"
                 ):
@@ -20,10 +22,13 @@ class RandomForest:
         self.minimas_obs_n = minimas_obs_n
         self.minimas_obs_h = minimas_obs_h
         self.ganancia_minima = ganancia_minima
+        self.ganancia_minima = ganancia_minima
+        self.top_atributos = top_atributos
+        self.umbral = umbral
         self.numero_estimadores = numero_estimadores
         self.bootstrap = bootstrap
         self.feature_selection_method = feature_selection_method
-        self.arboles: list[DecisionTreeClassifier] = []  #no se si es necesario que este como atrubuto pero bueno
+        self.arboles: list[DecisionTreeClassifier] = [] 
 
     @staticmethod
     def bootstraping(X: np.ndarray , y: np.ndarray, n_estimadores: int) -> list[list[np.ndarray]]:
@@ -39,7 +44,7 @@ class RandomForest:
         return muestras
     
     @staticmethod
-    def random_feature_selection(muestras_boostrapeadas: list[list[np.ndarray]], feature_selection_method: str) -> list[list[np.ndarray]]:
+    def random_feature_selection(muestras_boostrapeadas: list[list[np.ndarray]], feature_selection_method: str, nombres_atributos: list[str]) -> list[list[np.ndarray, list[str]]]:
         muestras_finales = [] 
         random_state = np.random.RandomState(seed=42)
         numero_features = muestras_boostrapeadas[0][0].shape[1]
@@ -51,31 +56,33 @@ class RandomForest:
         elif feature_selection_method == "none":
             n_features = numero_features
         else:
-            raise ValueError("No es un metodo valido de seleccion")
+            raise ValueError("No es un metodo valido de selección de atributos.")
 
         for muestra in muestras_boostrapeadas:
             choices = random_state.choice(numero_features, size=n_features, replace=False)
             choices = sorted(choices)
             x_selec = muestra[0][:, choices]
-            muestras_finales.append([x_selec, muestra[1]])
+            nombres_atributos_seleccionados = [nombres_atributos[i] for i in choices]
+            muestras_finales.append([x_selec, muestra[1], nombres_atributos_seleccionados])
         
         return muestras_finales
 
     def fit(self, X: DataFrame, y: DataFrame) -> None:
-        X_array = X.values
-        y_array = y.values
-
+        X_array = np.array(X)
+        y_array = np.array(y)
         if len(X_array) == len(y_array):
             if self.bootstrap:
                 muestras = RandomForest.bootstraping(X_array, y_array, self.numero_estimadores)
             else:
                 muestras = [[X_array, y_array] for _ in range(self.numero_estimadores)]
-                        
-            muestras = RandomForest.random_feature_selection(muestras, feature_selection_method=self.feature_selection_method)
+
+            nombres_atributos = X.columns.tolist()              
+            muestras = RandomForest.random_feature_selection(muestras, feature_selection_method=self.feature_selection_method, nombres_atributos=nombres_atributos)
 
             for n in range(self.numero_estimadores):
-                arbol = DecisionTreeClassifier(self.algoritmo, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
-                arbol.fit(DataFrame(muestras[n][0]), DataFrame(muestras[n][1]))
+                arbol = DecisionTreeClassifier(self.algoritmo, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima, 
+                                               self.top_atributos, self.umbral)
+                arbol.fit(DataFrame(muestras[n][0], columns=muestras[n][2]), DataFrame(muestras[n][1]))
                 self.arboles.append(arbol)
         else:
             raise ValueError("debe haber la misma cantidad de instancias en los features y en el target")
@@ -86,14 +93,12 @@ class RandomForest:
         for arbol in self.arboles:
             preds = arbol.predict(X)
             pred_arboles.append(preds)
-
+            
         preds_finales = []
         for i in range(len(X)):
             pred_i = [pred[i] for pred in pred_arboles]
             preds_finales.append(Counter(pred_i).most_common(1)[0][0])
-
-        print(f'Predicciones de cada árbol: {pred_arboles}')
-        print(f'Predicciones finales: {preds_finales}')
+        
         return preds_finales
     
     def get_params():
