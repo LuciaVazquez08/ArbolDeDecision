@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_sc
 
 
 def id3_RandomForest():
+
     df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/tratamiento.csv")
     print(df)
 
@@ -17,9 +18,8 @@ def id3_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo=ArbolID3, numero_estimadores=5, feature_selection_method='sqrt')
+    forest = RandomForest(algoritmo=ArbolID3, numero_estimadores=10, feature_selection_method='sqrt')
     forest.fit(X_train, y_train)
-
 
     # Evaluamos el modelo
     y_pred = forest.predict(X_test)
@@ -44,7 +44,8 @@ def c45_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo = ArbolC4_5, numero_estimadores=20, feature_selection_method='sqrt')
+    classifier = RandomForest(algoritmo=ArbolC4_5, numero_estimadores=10)
+    #classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5, profundidad_max=3)
     classifier.fit(X_train, y_train)
 
     # Evaluamos el modelo

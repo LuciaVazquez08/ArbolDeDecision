@@ -5,6 +5,29 @@ from typing import TypeVar
 T = TypeVar('T')
 
 class ArbolC4_5(Arbol):
+
+    """
+    Implementación del algoritmo de construcción C4.5.
+
+    Parámetros
+    ----------
+    dato : T 
+        El dato almacenado en el nodo del árbol.
+
+    atributo : str, default=None
+        El atributo utilizado para dividir el conjunto de datos en el nodo actual.
+
+    es_hoja : bool, default=False
+        Indica si el nodo es una hoja o no.
+    
+    Atributos
+    ---------
+    _hijos : dict
+        Diccionario que almacena los hijos (subárboles) de cada nodo.
+
+    _num_samples : int 
+        La cantidad de muestras almacenadas en cada nodo.
+    """
     
     def __init__(self, dato = T, atributo: str = None, es_hoja: bool = False):
         super().__init__(dato) 
@@ -34,12 +57,52 @@ class ArbolC4_5(Arbol):
                   indice_atributos: list[int],
                   nombres_atributos: list[str],
                   profundidad_max: int = None, 
-                  minimas_obs_n: int = 0, 
-                  minimas_obs_h: int = 0, 
-                  ganancia_minima: float = 0.0, 
+                  minimas_obs_n: int = None, 
+                  minimas_obs_h: int = None, 
+                  ganancia_minima: float = None,
                   profundidad_actual: int = 0
                   ) -> "ArbolC4_5":
         
+        """
+        Construye un árbol de decisión utilizando el algoritmo C4.5.
+
+        Parámetros
+        ----------
+        X : np.ndarray
+            Matriz de características del conjunto de datos de entrenamiento.
+
+        y : np.ndarray
+            Array con las etiquetas del conjunto de datos de entrenamiento.
+
+        tipos_atributos : list[str]
+            Lista que contiene los tipos de atributos en X, categóricos o continuos.
+        
+        indice_atributos : list[int]
+            Lista que contiene los índices de los atributos en X.
+        
+        nombres_atributos : list[str]
+            Lista que contiene los nombres de los atributos en X.
+
+        profundidad_max : int, default=None 
+            La profundidad máxima que puede alcanzar el árbol.
+
+        minimas_obs_n : int, default=None 
+            La cantidad mínima de observaciones requeridas para dividir un nodo interno. 
+
+        minimas_obs_h : int, default=None 
+            La cantidad mínima de observaciones requeridas presentes en una hoja. 
+
+        ganancia_minima : float, default=None 
+            La ganancia mínima al elegir el mejor atributo para dividir un nodo.
+
+        profundidad_actual : int, default=0
+            Profundidad actual del nodo en la construcción del árbol.
+
+        Returns
+        -------
+        ArbolC4_5 : Devuelve un objeto ArbolC4_5 del árbol de decisión construido.
+        """
+
         # Criterio de parada: Nodo puro 
         if len(np.unique(y)) == 1:
             clase_mayoritaria = cls.clase_mayoritaria(y)
@@ -133,6 +196,32 @@ class ArbolC4_5(Arbol):
 
     @staticmethod
     def seleccionar_mejor_atributo(X, y, tipos_atributos, atributos):
+        """
+        Selecciona el mejor atributo para dividir el conjunto de datos basado en la ganancia de información.
+
+        Parámetros
+        ----------
+        X : np.ndarray
+            Matriz de características del conjunto de datos de entrenamiento.
+            
+        y : np.ndarray
+            Array con las etiquetas del conjunto de datos de entrenamiento.
+            
+        tipos_atributos : list[str]
+            Lista que contiene los tipos de atributos en X, categóricos o continuos.
+            
+        atributos : list[int]
+            Lista de índices de los atributos a considerar para la selección.
+
+        Returns
+        -------
+        mejor_atributo : int
+            El índice del mejor atributo para la división.
+            
+        mejor_umbral : float
+            El umbral óptimo para la división en caso de que el atributo sea continuo, 
+            o None si el atributo es categórico.
+        """
         mejor_ganancia = -np.inf
         mejor_atributo = None
         mejor_umbral = None
@@ -157,6 +246,26 @@ class ArbolC4_5(Arbol):
     
     @staticmethod
     def determinar_tipo_atributo(atributo: np.ndarray, top_n: int, umbral: float) -> str:
+        """
+        Determina el tipo de un atributo (categórico o continuo) basado en la proporción 
+        de sus valores más frecuentes.
+
+        Parámetros
+        ----------
+        atributo : np.ndarray
+            Array de valores del atributo a analizar (columna con todos los valores).
+            
+        top_n : int
+            Número de valores más frecuentes a considerar para calcular la proporción.
+            
+        umbral : float
+            Umbral de proporción para decidir si el atributo es categórico o continuo.
+
+        Returns
+        -------
+        str : 'categorico' si la proporción de los top_n valores es mayor o igual al umbral, 
+              'continuo' en caso contrario.
+        """
         valores_unicos, conteos = np.unique(atributo, return_counts=True)
 
         # Si la proporción de los top_n valores es alta, se considera categórico
@@ -172,10 +281,29 @@ class ArbolC4_5(Arbol):
 
     @staticmethod
     def obtener_umbral_y_gain_ratio(atributo_continuo, y):
+        """
+        Calcula el umbral óptimo y el gain ratio para un atributo continuo.
+
+        Parámetros
+        ----------
+        atributo_continuo : np.ndarray
+            Array de valores del atributo continuo a analizar (columna con todos los valores).
+            
+        y : np.ndarray
+            Array con las etiquetas asociado al conjunto de datos de entrenamiento.
+
+        Returns
+        -------
+        tuple : Un par (umbral_optimo, ganancia_maxima) donde:
+                - umbral_optimo : float
+                    El valor óptimo del umbral que maximiza el gain ratio.
+                - ganancia_maxima : float
+                    El valor máximo del gain ratio obtenido para el umbral óptimo.
+        """
         ganancia_maxima = -1
         umbral_optimo = None
         
-        # Ordenar los valores únicos del atributo continuo
+        # Ordena los valores únicos del atributo continuo
         valores_unicos = np.sort(np.unique(atributo_continuo))
         
         for i in range(len(valores_unicos) - 1):
@@ -190,7 +318,7 @@ class ArbolC4_5(Arbol):
             if n_izquierda == 0 or n_derecha == 0:
                 continue
             
-            # Crear una matriz X para gain_ratio
+            # Crea una matriz X para gain_ratio
             X_dividido = np.concatenate((np.zeros(n_izquierda), np.ones(n_derecha)))
             y_dividido = np.concatenate((grupo_1_y, grupo_2_y))
             
@@ -203,9 +331,21 @@ class ArbolC4_5(Arbol):
         return umbral_optimo, ganancia_maxima
 
     @staticmethod
-    def clase_mayoritaria(y):
-        valores, counts = np.unique(y, return_counts=True)
-        return valores[np.argmax(counts)]
+    def clase_mayoritaria(y: np.ndarray) -> int:
+        """
+        Obtiene la clase mayoritaria en un conjunto de etiquetas y.
+
+        Parámetros
+        ----------
+        y : np.ndarray
+            Array de etiquetas del cual se desea encontrar la clase mayoritaria.
+
+        Returns
+        -------
+        int : Devuelve la clase que tiene la mayor frecuencia en el array de etiquetas.
+        """
+        clases, conteo = np.unique(y, return_counts=True)
+        return clases[np.argmax(conteo)]
 
 
 
