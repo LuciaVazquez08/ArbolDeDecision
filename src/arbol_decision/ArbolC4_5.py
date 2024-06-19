@@ -155,16 +155,17 @@ class ArbolC4_5(Arbol):
             # Criterio de parada: Mínimas observaciones por hoja (no anda)
             if minimas_obs_h is not None and minimas_obs_h > len(sub_y_izq): 
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y_izq)
-                subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
-                subarbol._num_samples = len(sub_y_izq)
+                sub_arbol_izq = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+                sub_arbol_izq._num_samples = len(sub_y_izq)
             else:
                 sub_arbol_izq = cls.construir(sub_X_izq, sub_y_izq, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
+
 
             # Criterio de parada: Mínimas observaciones por hoja (no anda)
             if minimas_obs_h is not None and minimas_obs_h > len(sub_y_der): 
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y_der)
-                subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
-                subarbol._num_samples = len(sub_y_der)
+                sub_arbol_der = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+                sub_arbol_der._num_samples = len(sub_y_der)
             else:
                 sub_arbol_der = cls.construir(sub_X_der, sub_y_der, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
 

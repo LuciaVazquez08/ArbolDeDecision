@@ -140,6 +140,7 @@ class ArbolID3(Arbol):
             hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
+    
 
         # Seleccionamos el atributo con mayor ganancia y creamos un arbol con ese atributo
         mejor_atributo = indice_atributos[np.argmax(ganancias)]

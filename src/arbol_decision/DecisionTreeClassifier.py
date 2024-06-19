@@ -88,10 +88,8 @@ class DecisionTreeClassifier:
             indice_atributos = list(range(X_array.shape[1]))
             nombres_atributos = X.columns.tolist()
             self._tipos_atributos = [ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo], self.top_atributos, self.umbral) for atributo in indice_atributos]
-            print(self._tipos_atributos)
             self._arbol = self.algoritmo.construir(X_array, y_array, self._tipos_atributos, indice_atributos, nombres_atributos, 
                                                   self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
-            #print(self._arbol)
         else:
             raise ValueError("Debe haber la misma cantidad de instancias en X y en y")
         
@@ -141,7 +139,6 @@ class DecisionTreeClassifier:
                 raise ValueError("Tipo de atributo desconocido")
           
         predicciones = [_predict_instancia(instancia, self._arbol) for instancia in X_array]
-        print('Predicciones', predicciones)
         return predicciones
     
 

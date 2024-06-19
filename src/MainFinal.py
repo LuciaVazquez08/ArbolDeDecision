@@ -13,22 +13,28 @@ def main_interactivo():
     while True:
         print("\nSelecciona una opción:")
         print("1. Funcionamiento del ID3 con DecisionTreeClassifier")
-        print("2. Funcionamiento del C4.5 con DecisionTreeClassifier")
+        print("2. Funcionamiento del C4.5 con DecisionTreeClassifier (solo atributos continuos)")
         print("3. Funcionamiento del ID3 con RandomForest")
-        print("4. Funcionamiento del C4.5 con RandomForest")
-        print("5. Salir")
+        print("4. Funcionamiento del C4.5 con RandomForest (solo atributos continuos)")
+        print("5. Funcionamiento del C4.5 con DecisionTreeClassifier")
+        print("6. Funcionamiento del C4.5 con RandomForest")
+        print("7. Salir")
 
         opcion = input("Ingrese el número de la tarea que desea realizar: ")
 
         if opcion == "1":
             id3_DecisionTree()
         elif opcion == "2":
-            c45_DecisionTree()
+            c45_DecisionTree_continuos()
         elif opcion == "3":
             id3_RandomForest()
         elif opcion == "4":
-            c45_RandomForest()
+            c45_RandomForest_continuos()
         elif opcion == "5":
+            c45_DecisionTree()
+        elif opcion == "6":
+            c45_RandomForest()
+        elif opcion == "7":
             print("Gracias por su atención, ¡hasta luego!")
             break
         else:
@@ -56,7 +62,7 @@ def id3_DecisionTree():
     # Creamos y entrenamos el clasificador de árbol de decisión
     classifier = DecisionTreeClassifier(algoritmo=ArbolID3)
     classifier.fit(X_train, y_train)
-    print(classifier.arbol)
+    print(classifier._arbol)
 
     input("Ahora vamos a ver las métricas:")
 
@@ -74,7 +80,7 @@ def id3_DecisionTree():
     print(f'{matriz}')
 
 
-def c45_DecisionTree():
+def c45_DecisionTree_continuos():
     print("Dataset elegido:")
     df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/star.csv")
     print(df)
@@ -94,20 +100,20 @@ def c45_DecisionTree():
     # Creamos y entrenamos el clasificador de árbol de decisión
     classifier = DecisionTreeClassifier(algoritmo = ArbolC4_5)
     classifier.fit(X_train, y_train)
-    print(classifier.arbol)
+    print(classifier._arbol)
 
     input("Este árbol es muy grande, así que vamos a probar cómo funcionan algunos criterios de parada...")
     input("Vamos a usar una profundidad máxima = 3 y mínimas observaciones por nodo = 35:")
 
     # Creamos y entrenamos el clasificador de árbol de decisión con hiperparámetros
-    classifier_hiper = DecisionTreeClassifier(algoritmo = ArbolC4_5, profundidad_max=3, minimas_obs_n=35)
-    classifier_hiper.fit(X_train, y_train)
-    print(classifier_hiper.arbol)
+    classifier = DecisionTreeClassifier(algoritmo = ArbolC4_5, profundidad_max=3, minimas_obs_n=35)
+    classifier.fit(X_train, y_train)
+    print(classifier._arbol)
 
     input("Ahora vamos a ver las métricas:")
 
     # Evaluamos el modelo
-    y_pred = classifier_hiper.predict(X_test)
+    y_pred = classifier.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred, average= 'weighted')
     recall = recall_score(y_test, y_pred, average= 'weighted')
@@ -135,12 +141,11 @@ def id3_RandomForest():
     y = df[['AdministrarTratamiento']]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo=ArbolID3, numero_estimadores=5, feature_selection_method='sqrt')
+    forest = RandomForest(algoritmo=ArbolID3, feature_selection_method='sqrt')
     forest.fit(X_train, y_train)
 
-    input("Ahora vamos a ver las métricas de nuestro RandomForest:")
+    input("Ahora vamos a ver las métricas de nuestro RandomForest con 100 árboles:")
 
     # Evaluamos el modelo
     y_pred = forest.predict(X_test)
@@ -156,7 +161,7 @@ def id3_RandomForest():
     print(f'{matriz}')
 
 
-def c45_RandomForest():
+def c45_RandomForest_continuos():
     print("Dataset elegido:")
     df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/star.csv")
     print(df)
@@ -172,10 +177,82 @@ def c45_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo = ArbolC4_5, numero_estimadores=5, feature_selection_method='sqrt')
+    forest = RandomForest(algoritmo = ArbolC4_5, n_estimadores=5, feature_selection_method='sqrt')
     forest.fit(X_train, y_train)
 
-    input("Ahora vamos a ver las métricas de nuestro RandomForest:")
+    input("Ahora vamos a ver las métricas de nuestro RandomForest con 5 árboles:")
+
+    # Evaluamos el modelo
+    y_pred = forest.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average= 'weighted')
+    recall = recall_score(y_test, y_pred, average= 'weighted')
+    f1 = f1_score(y_test, y_pred, average= 'weighted')
+    matriz = confusion_matrix(y_test, y_pred)
+    print(f'Accuracy: {accuracy}')
+    print(f'Precision: {precision}')
+    print(f'Recall: {recall}')
+    print(f'F1-score: {f1}')
+    print(f'{matriz}')
+
+def c45_DecisionTree():
+    print("Dataset elegido:")
+    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/heart.csv")
+    print(df)
+
+    input("Presione Enter para continuar...")
+
+    # Vemos el balance del target 
+    balance = df['output'].value_counts() 
+    print(f'Balance del target: {balance}')
+
+    input("Vamos a ver el resultado de nuestro árbol entrenado...")
+
+    X = df.drop(['output'], axis=1)
+    y = df[['output']]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Creamos y entrenamos el clasificador de árbol de decisión
+    classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)
+    classifier.fit(X_train, y_train)
+    print(classifier._arbol)
+
+    input("Ahora vamos a ver las métricas:")
+
+    # Evaluamos el modelo
+    y_pred = classifier.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average= 'weighted')
+    recall = recall_score(y_test, y_pred, average= 'weighted')
+    f1 = f1_score(y_test, y_pred, average= 'weighted')
+    matriz = confusion_matrix(y_test, y_pred)
+    print(f'Accuracy: {accuracy}')
+    print(f'Precision: {precision}')
+    print(f'Recall: {recall}')
+    print(f'F1-score: {f1}')
+    print(f'{matriz}')
+
+def c45_RandomForest():
+    print("Dataset elegido:")
+    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/heart.csv")
+    print(df)
+
+    input("Presione Enter para continuar...")
+
+    # Vemos el balance del target 
+    balance = df['output'].value_counts() 
+    print(f'Balance del target: {balance}')
+
+    X = df.drop(['output'], axis=1)
+    y = df[['output']]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Creamos y entrenamos el clasificador de árbol de decisión
+    forest = RandomForest(algoritmo=ArbolC4_5, n_estimadores=20, feature_selection_method='none')
+    forest.fit(X_train, y_train)
+
+    input("Ahora vamos a ver las métricas de nuestro RandomForest con 20 árboles:")
 
     # Evaluamos el modelo
     y_pred = forest.predict(X_test)

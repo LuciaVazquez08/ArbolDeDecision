@@ -18,8 +18,8 @@ def id3_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo=ArbolID3, n_estimadores=5, feature_selection_method='sqrt')
-    #forest = DecisionTreeClassifier(algoritmo=ArbolID3)
+    #forest = RandomForest(algoritmo=ArbolID3, n_estimadores=5, feature_selection_method='sqrt')
+    forest = DecisionTreeClassifier(algoritmo=ArbolID3)
     forest.fit(X_train, y_train)
 
     # Evaluamos el modelo
@@ -45,8 +45,8 @@ def c45_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo=ArbolC4_5, n_estimadores=10, feature_selection_method='none')  # 0.88
-    #classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)          # 0.86
+    # classifier = RandomForest(algoritmo=ArbolC4_5, n_estimadores=10, feature_selection_method='none')  # 0.88
+    classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5, minimas_obs_h=10)          # 0.86
     classifier.fit(X_train, y_train)
 
     # Evaluamos el modelo
@@ -63,4 +63,4 @@ def c45_RandomForest():
     print(f'{matriz}')
 
 if __name__ == '__main__':
-    c45_RandomForest()
+    id3_RandomForest()

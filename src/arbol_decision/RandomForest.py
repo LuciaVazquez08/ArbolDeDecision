@@ -214,7 +214,7 @@ class RandomForest:
 
         Returns
         -------
-        list[T] : Devuelve una lista con las predicciones para cada instancia de X.
+        list[T] : Devuelve una lista con las predicciones para cada instancia de X, combinando las predicciones de cada árbol entrenado.
 
         """
         pred_arboles = []
