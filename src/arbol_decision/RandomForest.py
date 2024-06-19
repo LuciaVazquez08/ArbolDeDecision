@@ -1,8 +1,8 @@
+from arbol_decision.ArbolID3 import ArbolID3
+from arbol_decision.ArbolC4_5 import ArbolC4_5
+from arbol_decision.DecisionTreeClassifier import DecisionTreeClassifier
 import numpy as np
 from pandas import DataFrame
-from ArbolID3 import ArbolID3
-from ArbolC4_5 import ArbolC4_5
-from DecisionTreeClassifier import DecisionTreeClassifier
 from collections import Counter
 from typing import Generic, TypeVar
 T = TypeVar('T')
@@ -46,7 +46,7 @@ class RandomForest:
         El método para seleccionar los atributos a considerar al buscar el mejor 
         atributo para dividir. Puede ser:
         - "sqrt" (raíz cuadrada de la cantidad total de atributos).
-        - "log2" (logaritmo en base 2 de la cantidad total de atributos).
+        - "log" (logaritmo en base 2 de la cantidad total de atributos).
         - "none" (selecciona todos los atributos).
 
     Atributos
@@ -78,7 +78,7 @@ class RandomForest:
         self.n_estimadores = n_estimadores
         self.bootstrap = bootstrap
         self.feature_selection_method = feature_selection_method
-        self.arboles: list[DecisionTreeClassifier] = [] 
+        self._arboles: list[DecisionTreeClassifier] = [] 
 
     @staticmethod
     def bootstraping(X: np.ndarray , y: np.ndarray, n_estimadores: int) -> list[list[np.ndarray]]:
@@ -199,7 +199,7 @@ class RandomForest:
                 arbol = DecisionTreeClassifier(self.algoritmo, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima, 
                                                self.top_atributos, self.umbral)
                 arbol.fit(DataFrame(muestras[n][0], columns=muestras[n][2]), DataFrame(muestras[n][1]))
-                self.arboles.append(arbol)
+                self._arboles.append(arbol)
         else:
             raise ValueError("Debe haber la misma cantidad de instancias en X y en y")
         
@@ -219,7 +219,7 @@ class RandomForest:
         """
         pred_arboles = []
 
-        for arbol in self.arboles:
+        for arbol in self._arboles:
             preds = arbol.predict(X)
             pred_arboles.append(preds)
             

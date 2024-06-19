@@ -1,8 +1,8 @@
 import pandas as pd
-from ArbolC4_5 import ArbolC4_5
-from ArbolID3 import ArbolID3
-from DecisionTreeClassifier import DecisionTreeClassifier
-from RandomForest import RandomForest
+from arbol_decision.ArbolC4_5 import ArbolC4_5
+from arbol_decision.ArbolID3 import ArbolID3
+from arbol_decision.DecisionTreeClassifier import DecisionTreeClassifier
+from arbol_decision.RandomForest import RandomForest
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, confusion_matrix
 
@@ -18,7 +18,8 @@ def id3_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo=ArbolID3, numero_estimadores=10, feature_selection_method='sqrt')
+    forest = RandomForest(algoritmo=ArbolID3, n_estimadores=5, feature_selection_method='sqrt')
+    #forest = DecisionTreeClassifier(algoritmo=ArbolID3)
     forest.fit(X_train, y_train)
 
     # Evaluamos el modelo
@@ -44,8 +45,8 @@ def c45_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo=ArbolC4_5, numero_estimadores=10)
-    #classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5, profundidad_max=3)
+    classifier = RandomForest(algoritmo=ArbolC4_5, n_estimadores=10, feature_selection_method='none')  # 0.88
+    #classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)          # 0.86
     classifier.fit(X_train, y_train)
 
     # Evaluamos el modelo
@@ -54,7 +55,7 @@ def c45_RandomForest():
     precision = precision_score(y_test, y_pred, average= 'weighted')
     recall = recall_score(y_test, y_pred, average= 'weighted')
     f1 = f1_score(y_test, y_pred, average= 'weighted')
-    matriz = confusion_matrix(y_test, y_pred)
+    matriz = confusion_matrix(y_test, y_pred)   
     print(f'Accuracy: {accuracy}')
     print(f'Precision: {precision}')
     print(f'Recall: {recall}')
@@ -62,4 +63,4 @@ def c45_RandomForest():
     print(f'{matriz}')
 
 if __name__ == '__main__':
-    id3_RandomForest()
+    c45_RandomForest()

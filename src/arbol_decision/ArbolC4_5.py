@@ -1,6 +1,6 @@
-from Ganancia import Ganancia
+from arbol_decision.Ganancia import Ganancia
+from arbol_decision.Arbol import Arbol
 import numpy as np
-from Arbol import Arbol
 from typing import TypeVar
 T = TypeVar('T')
 

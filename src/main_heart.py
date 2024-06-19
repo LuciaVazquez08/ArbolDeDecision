@@ -1,12 +1,10 @@
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split
-from ArbolID3 import ArbolID3
-from ArbolC4_5 import ArbolC4_5
-from DecisionTreeClassifier import DecisionTreeClassifier
+from arbol_decision.ArbolID3 import ArbolID3
+from arbol_decision.ArbolC4_5 import ArbolC4_5
+from arbol_decision.DecisionTreeClassifier import DecisionTreeClassifier
+from arbol_decision.RandomForest import RandomForest
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
-
-from RandomForest import RandomForest
 
 
 # Función principal
@@ -26,8 +24,8 @@ def main():
     print (X_train.shape, X_test.shape)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = RandomForest(algoritmo=ArbolC4_5, n_estimadores=5)
-    #classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)
+    classifier = RandomForest(algoritmo=ArbolC4_5, n_estimadores=10, feature_selection_method='none') # 0.82
+    #classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)  # 0.77
     classifier.fit(X_train, y_train)
     
     # Evaluamos el modelo

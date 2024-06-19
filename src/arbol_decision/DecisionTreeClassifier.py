@@ -1,7 +1,6 @@
-from typing import TypeVar
+from arbol_decision.ArbolID3 import ArbolID3
+from arbol_decision.ArbolC4_5 import ArbolC4_5
 from pandas import DataFrame
-from ArbolID3 import ArbolID3
-from ArbolC4_5 import ArbolC4_5
 import numpy as np
 from typing import Generic, TypeVar
 T = TypeVar('T')
@@ -37,6 +36,10 @@ class DecisionTreeClassifier:
 
     Atributos
     ---------
+    _tipos_atributos: Los tipos de atributos del conjunto de entrenamiento X, default=None
+
+    _y : Los valores del target en formato Array, default=None
+
     _arbol : Instancia del árbol, default=None
 
     """
@@ -57,6 +60,8 @@ class DecisionTreeClassifier:
         self.ganancia_minima = ganancia_minima
         self.top_atributos = top_atributos
         self.umbral = umbral
+        self._tipos_atributos = None
+        self._y = None
         self._arbol = None
 
 
@@ -78,15 +83,17 @@ class DecisionTreeClassifier:
         """
         X_array = np.array(X)
         y_array = np.array(y)
+        self._y = y_array  
         if len(X_array) == len(y_array):
             indice_atributos = list(range(X_array.shape[1]))
             nombres_atributos = X.columns.tolist()
-            tipos_atributos = [ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo], self.top_atributos, self.umbral) for atributo in indice_atributos]
-            self._arbol = self.algoritmo.construir(X_array, y_array, tipos_atributos, indice_atributos, nombres_atributos, 
+            self._tipos_atributos = [ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo], self.top_atributos, self.umbral) for atributo in indice_atributos]
+            print(self._tipos_atributos)
+            self._arbol = self.algoritmo.construir(X_array, y_array, self._tipos_atributos, indice_atributos, nombres_atributos, 
                                                   self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima)
+            #print(self._arbol)
         else:
             raise ValueError("Debe haber la misma cantidad de instancias en X y en y")
-        
         
     def predict(self, X: DataFrame) -> list[T]:
         """
@@ -102,6 +109,7 @@ class DecisionTreeClassifier:
         list[T] : Devuelve una lista con las predicciones para cada instancia de X.
         """
         X_array = np.array(X)
+        
         def _predict_instancia(instancia: np.ndarray, nodo_actual: self.algoritmo) -> T:
 
             if nodo_actual._es_hoja:
@@ -109,29 +117,32 @@ class DecisionTreeClassifier:
             
             atributo = nodo_actual.dato
             valor = instancia[atributo]
-            tipo_atributo = ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo], self.top_atributos, self.umbral)
+            tipo_atributo = self._tipos_atributos[atributo]
 
-            # Manejamos las predicciones en donde el atributo es numérico
+            # Manejamos las predicciones en donde el atributo es continuo
             if tipo_atributo == 'continuo':
                 for (operador, umbral), hijo in nodo_actual._hijos.items():
                     if (operador == '<=' and valor <= umbral) or (operador == '>' and valor > umbral):
                         return _predict_instancia(instancia, hijo)
-                # Si no se encuentra el valor en los hijos, retornamos la clase mayoritaria del nodo actual
-                clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja]
-                return self.algoritmo.clase_mayoritaria(np.array(clases))
                    
             # Manejamos las predicciones en donde el atributo es categórico
-            elif tipo_atributo == 'categorico':                                 
+            elif tipo_atributo == 'categorico':
                 if valor in nodo_actual._hijos:
                     return _predict_instancia(instancia, nodo_actual._hijos[valor])
                 else:
                     # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
-                    clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja] 
+                    clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja]
+                    # Si la lista de clases está vacía, devuelve la clase mayoritaria de todo el conjunto de entrenamiento y
+                    if not clases: 
+                        return self.algoritmo.clase_mayoritaria(self._y)
                     return self.algoritmo.clase_mayoritaria(np.array(clases))
                 
             else:
                 raise ValueError("Tipo de atributo desconocido")
           
         predicciones = [_predict_instancia(instancia, self._arbol) for instancia in X_array]
+        print('Predicciones', predicciones)
         return predicciones
+    
+
 

@@ -1,8 +1,8 @@
 import pandas as pd
-from ArbolC4_5 import ArbolC4_5
-from ArbolID3 import ArbolID3
-from DecisionTreeClassifier import DecisionTreeClassifier
-from RandomForest import RandomForest
+from arbol_decision.ArbolC4_5 import ArbolC4_5
+from arbol_decision.ArbolID3 import ArbolID3
+from arbol_decision.DecisionTreeClassifier import DecisionTreeClassifier
+from arbol_decision.RandomForest import RandomForest
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, confusion_matrix
 
