@@ -7,7 +7,7 @@ from collections import Counter
 from typing import Generic, TypeVar
 T = TypeVar('T')
 
-class RandomForest:
+class RandomForestClassifier:
 
     """
     Implementación del RandomForestClassifier.
@@ -187,13 +187,18 @@ class RandomForest:
         X_array = np.array(X)
         y_array = np.array(y)
         if len(X_array) == len(y_array):
+
+            # Completamos los valores faltantes
+            if isinstance(self.algoritmo, ArbolC4_5):
+                X_array = self.algoritmo.imputar_valores_faltantes(X_array)
+                
             if self.bootstrap:
-                muestras = RandomForest.bootstraping(X_array, y_array, self.n_estimadores)
+                muestras = RandomForestClassifier.bootstraping(X_array, y_array, self.n_estimadores)
             else:
                 muestras = [[X_array, y_array] for _ in range(self.n_estimadores)]
 
             nombres_atributos = X.columns.tolist()              
-            muestras = RandomForest.random_feature_selection(muestras, feature_selection_method=self.feature_selection_method, nombres_atributos=nombres_atributos)
+            muestras = RandomForestClassifier.random_feature_selection(muestras, feature_selection_method=self.feature_selection_method, nombres_atributos=nombres_atributos)
 
             for n in range(self.n_estimadores):
                 arbol = DecisionTreeClassifier(self.algoritmo, self.profundidad_max, self.minimas_obs_n, self.minimas_obs_h, self.ganancia_minima, 

@@ -2,7 +2,7 @@ import pandas as pd
 from arbol_decision.ArbolC4_5 import ArbolC4_5
 from arbol_decision.ArbolID3 import ArbolID3
 from arbol_decision.DecisionTreeClassifier import DecisionTreeClassifier
-from arbol_decision.RandomForest import RandomForest
+from arbol_decision.RandomForestClassifier import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, confusion_matrix
 
@@ -60,7 +60,7 @@ def id3_DecisionTree():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = DecisionTreeClassifier(algoritmo=ArbolID3)
+    classifier = DecisionTreeClassifier(algoritmo=ArbolID3, minimas_obs_h=3)
     classifier.fit(X_train, y_train)
     print(classifier._arbol)
 
@@ -142,7 +142,7 @@ def id3_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo=ArbolID3, feature_selection_method='sqrt')
+    forest = RandomForestClassifier(algoritmo=ArbolID3, feature_selection_method='sqrt')
     forest.fit(X_train, y_train)
 
     input("Ahora vamos a ver las métricas de nuestro RandomForest con 100 árboles:")
@@ -177,7 +177,7 @@ def c45_RandomForest_continuos():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo = ArbolC4_5, n_estimadores=5, feature_selection_method='sqrt')
+    forest = RandomForestClassifier(algoritmo = ArbolC4_5, n_estimadores=5, feature_selection_method='sqrt')
     forest.fit(X_train, y_train)
 
     input("Ahora vamos a ver las métricas de nuestro RandomForest con 5 árboles:")
@@ -249,7 +249,7 @@ def c45_RandomForest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    forest = RandomForest(algoritmo=ArbolC4_5, n_estimadores=20, feature_selection_method='none')
+    forest = RandomForestClassifier(algoritmo=ArbolC4_5, n_estimadores=20, feature_selection_method='none')
     forest.fit(X_train, y_train)
 
     input("Ahora vamos a ver las métricas de nuestro RandomForest con 20 árboles:")

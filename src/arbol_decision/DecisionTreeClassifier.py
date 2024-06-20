@@ -85,6 +85,11 @@ class DecisionTreeClassifier:
         y_array = np.array(y)
         self._y = y_array  
         if len(X_array) == len(y_array):
+            
+            # Completamos los valores faltantes
+            if isinstance(self.algoritmo, ArbolC4_5):
+                X_array = self.algoritmo.imputar_valores_faltantes(X_array)
+
             indice_atributos = list(range(X_array.shape[1]))
             nombres_atributos = X.columns.tolist()
             self._tipos_atributos = [ArbolC4_5.determinar_tipo_atributo(X_array[:, atributo], self.top_atributos, self.umbral) for atributo in indice_atributos]

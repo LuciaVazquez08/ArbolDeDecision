@@ -1,7 +1,8 @@
+import pandas as pd
 from arbol_decision.Ganancia import Ganancia
 from arbol_decision.Arbol import Arbol
 import numpy as np
-from typing import TypeVar
+from typing import Counter, TypeVar
 T = TypeVar('T')
 
 class ArbolC4_5(Arbol):
@@ -132,7 +133,14 @@ class ArbolC4_5(Arbol):
             return hoja
 
         # Seleccionar el mejor atributo
-        mejor_atributo, mejor_umbral = cls.seleccionar_mejor_atributo(X, y, tipos_atributos, indice_atributos)
+        mejor_atributo, mejor_umbral, mejor_ganancia = cls.seleccionar_mejor_atributo(X, y, tipos_atributos, indice_atributos)
+
+        # Criterio de parada: Ganancia mínima (verifica si la ganancia supera el umbral mínimo)
+        if ganancia_minima is not None and np.all(mejor_ganancia < ganancia_minima):
+            clase_mayoritaria = cls.clase_mayoritaria(y)
+            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja._num_samples = len(y)
+            return hoja
 
         # Creamos el árbol con el mejor atributo
         arbol = ArbolC4_5(mejor_atributo, atributo=nombres_atributos[mejor_atributo])
@@ -242,7 +250,35 @@ class ArbolC4_5(Arbol):
                 mejor_atributo = atributo
                 mejor_umbral = umbral
 
-        return mejor_atributo, mejor_umbral
+        return mejor_atributo, mejor_umbral, mejor_ganancia
+    
+    # AGREGAR DOCS
+    def imputar_valores_faltantes(self, X: np.ndarray) -> np.ndarray:
+           
+            X_imputado = X.copy()
+
+            for atributo in range(X.shape[1]):
+                columna_atributo = X[:, atributo]
+                valores_faltantes = pd.isnull(columna_atributo)  
+
+                if np.any(valores_faltantes):
+                    tipo_atributo = self.determinar_tipo_atributo(columna_atributo[~valores_faltantes], top_n=3, umbral=0.8)
+
+                    if tipo_atributo == "categorico":
+            
+                        valores_clase = Counter(columna_atributo[~valores_faltantes])
+                        valor_mas_comun = max(valores_clase, key=valores_clase.get)
+                        X_imputado[valores_faltantes, atributo] = valor_mas_comun
+                    elif tipo_atributo == "continuo":
+                    
+                        media_atributo = np.nanmean(columna_atributo[~valores_faltantes].astype(float))
+                        media_atributo = round(float(media_atributo), 2)  
+                        X_imputado[valores_faltantes, atributo] = media_atributo
+
+            print("Conjunto de datos después de imputar valores faltantes:")
+            print(X_imputado)
+
+            return X_imputado
     
     
     @staticmethod
@@ -267,6 +303,10 @@ class ArbolC4_5(Arbol):
         str : 'categorico' si la proporción de los top_n valores es mayor o igual al umbral, 
               'continuo' en caso contrario.
         """
+
+        if np.issubdtype(atributo.dtype, np.number):
+            atributo = atributo[~np.isnan(atributo)]
+
         valores_unicos, conteos = np.unique(atributo, return_counts=True)
 
         # Si la proporción de los top_n valores es alta, se considera categórico

@@ -162,6 +162,7 @@ class ArbolID3(Arbol):
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y)
                 subarbol = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
                 subarbol._num_samples = len(sub_y)
+                return subarbol
             else:
                 subarbol = cls.construir(sub_X, sub_y, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
                 
