@@ -1,4 +1,4 @@
-from arbol_decision.Balanceo import Balanceo
+#from arbol_decision.Balanceo import Balanceo
 from arbol_decision.ArbolID3 import ArbolID3
 from arbol_decision.ArbolC4_5 import ArbolC4_5
 from arbol_decision.DecisionTreeClassifier import DecisionTreeClassifier
@@ -204,7 +204,7 @@ class RandomForestClassifier:
             if self.algoritmo == ArbolC4_5:
                 X_array = ArbolC4_5.imputar_valores_faltantes(X_array, self.top_atributos, self.umbral)
 
-            if self.tecnica_balanceo:
+            '''if self.tecnica_balanceo:
                 if self.tecnica_balanceo == "RandomUnder":
                     X_array, y_array = Balanceo.random_undersample(X_array,y_array)
                 elif self.tecnica_balanceo == "RandomOver":
@@ -216,7 +216,7 @@ class RandomForestClassifier:
                 elif self.tecnica_balanceo == "NearMiss":
                     X_array, y_array = Balanceo.nearmiss(X_array,y_array)
                 else:
-                    raise ValueError("las opciones validas son RandomUnder, RandomOver, TomekLinks, SMOTE y Nearmiss")
+                    raise ValueError("las opciones validas son RandomUnder, RandomOver, TomekLinks, SMOTE y Nearmiss")'''
                 
             if self.bootstrap:
                 muestras = RandomForestClassifier.bootstraping(X_array, y_array, self.n_estimadores)

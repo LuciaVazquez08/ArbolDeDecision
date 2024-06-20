@@ -145,7 +145,6 @@ class DecisionTreeClassifier:
                 raise ValueError("Tipo de atributo desconocido")
           
         predicciones = [_predict_instancia(instancia, self._arbol) for instancia in X_array]
-        print(predicciones)
         return predicciones
     
 
