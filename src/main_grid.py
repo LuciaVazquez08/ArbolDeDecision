@@ -18,7 +18,7 @@ def main():
 
 
     # Hacemos listas de hiperparámetros para hallar la mejor combinación
-    prof_max_list = [5, 10, 15, 20]
+    '''prof_max_list = [5, 10, 15, 20]
     minimas_obs_n_list = [3, 5, 10, 20, 30]
     minimas_obs_h_list = [3, 5, 10, 20, 30]
     scoring = ['accuracy', 'precision', 'recall', 'f1']
@@ -55,10 +55,10 @@ def main():
 
     print("Mejor combinación de hiperparámetros:")
     mejor_modelo_tree = data_results_tree.iloc[data_results_tree['f1_score_cv'].argmax()]
-    print(mejor_modelo_tree)
+    print(mejor_modelo_tree)'''
 
     # Creamos y entrenamos el clasificador de árbol de decisión con los mejores hiperparámetros
-    mejor_classifier = DecisionTreeClassifier(algoritmo=ArbolID3)
+    mejor_classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)
     mejor_classifier.fit(X_train, y_train)
     print(mejor_classifier._arbol)
 

@@ -1,3 +1,4 @@
+from arbol_decision.Balanceo import Balanceo
 from arbol_decision.ArbolID3 import ArbolID3
 from arbol_decision.ArbolC4_5 import ArbolC4_5
 from arbol_decision.DecisionTreeClassifier import DecisionTreeClassifier
@@ -49,6 +50,12 @@ class RandomForestClassifier:
         - "log" (logaritmo en base 2 de la cantidad total de atributos).
         - "none" (selecciona todos los atributos).
 
+    tecnica balanceo : str, default=None
+        .......................
+
+    class_weight : str | dict, default=None
+        .........................
+
     Atributos
     ---------
     _arboles : list[DecisionTreeClassifier]
@@ -65,7 +72,9 @@ class RandomForestClassifier:
                  umbral: float = 0.8, 
                  n_estimadores: int = 100, 
                  bootstrap: bool = True,
-                 feature_selection_method: str = "sqrt"
+                 feature_selection_method: str = "sqrt",
+                 tecnica_balanceo: str = None,
+                 class_weight: str | dict = None
                 ):
         self.algoritmo = algoritmo
         self.profundidad_max = profundidad_max
@@ -78,6 +87,8 @@ class RandomForestClassifier:
         self.n_estimadores = n_estimadores
         self.bootstrap = bootstrap
         self.feature_selection_method = feature_selection_method
+        self.class_weight = class_weight
+        self.tecnica_balanceo = tecnica_balanceo
         self._arboles: list[DecisionTreeClassifier] = [] 
 
     @staticmethod
@@ -186,11 +197,26 @@ class RandomForestClassifier:
         """
         X_array = np.array(X)
         y_array = np.array(y)
+
         if len(X_array) == len(y_array):
 
             # Completamos los valores faltantes si los hay
             if self.algoritmo == ArbolC4_5:
                 X_array = ArbolC4_5.imputar_valores_faltantes(X_array, self.top_atributos, self.umbral)
+
+            if self.tecnica_balanceo:
+                if self.tecnica_balanceo == "RandomUnder":
+                    X_array, y_array = Balanceo.random_undersample(X_array,y_array)
+                elif self.tecnica_balanceo == "RandomOver":
+                    X_array, y_array = Balanceo.random_oversample(X_array,y_array)
+                elif self.tecnica_balanceo == "TomekLinks":
+                    X_array, y_array = Balanceo.tomek_links(X_array,y_array)
+                elif self.tecnica_balanceo == "SMOTE":
+                    X_array, y_array = Balanceo.smote(X_array,y_array)
+                elif self.tecnica_balanceo == "NearMiss":
+                    X_array, y_array = Balanceo.nearmiss(X_array,y_array)
+                else:
+                    raise ValueError("las opciones validas son RandomUnder, RandomOver, TomekLinks, SMOTE y Nearmiss")
                 
             if self.bootstrap:
                 muestras = RandomForestClassifier.bootstraping(X_array, y_array, self.n_estimadores)
@@ -235,23 +261,38 @@ class RandomForestClassifier:
         
         return preds_finales
     
-    def get_params():
-    #TODO: get_params -> devuelve los hiperparametros no nulos    
-        pass
+    def get_params(self):
+        return self.__dict__
 
-    def set_params():
-    #TODO: set_params
-        pass
+    def set_params(self, **params):
+        for key, value in params.items():
+                if hasattr(self,key):
+                    setattr(self,key,value)
+                else:
+                    raise ValueError(f"{key} no es un atributo valido")
 
-    def predict_proba():
-    #TODO: predice las probabilidades de cada clase dado un array de instancias 
-        pass
+    def predict_proba(self, X: DataFrame):
+        n_samples = X.shape[0]
+        cantidades = {c: np.zeros(n_samples) for c in np.unique(self.arboles[0].predict(X))}
 
-    def score():
-    #TODO: devuelve la media de la accuracy+
-        pass
+        for arbol in self.arboles:
+            pred = arbol.predict(X)
+            for i, pred in enumerate(pred):
+                cantidades[pred][i] += 1
 
-    def decision_path():
-    #TODO: decision_path(x)     
-        pass
-    
+        prob = np.zeros((n_samples, len(cantidades)))
+        for i, cls in enumerate(cantidades):
+            prob[:, i] = cantidades[cls] / len(self.arboles)
+        
+        return prob
+
+    def score(self, X,y):
+        X_array = np.asarray(X)
+        y_array = np.asarray(y)
+        if len(X_array) == len(y_array):
+            pred = self.predict(X_array)
+            acc = sum(p == t for p,t in zip(pred,y_array))
+            accuracy = acc / len(y_array)
+            return accuracy
+        else:
+            raise ValueError("Debe haber la cantidad de instancias en los features que en el target")

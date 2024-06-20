@@ -13,6 +13,9 @@ class ArbolID3(Arbol):
     ----------
     dato : T 
         El dato almacenado en el nodo del árbol.
+    
+    label : T, default=None
+        Es la clase mayoritaria del nodo.
 
     atributo : str, default=None
         El atributo utilizado para dividir el conjunto de datos en el nodo actual.
@@ -29,8 +32,9 @@ class ArbolID3(Arbol):
         La cantidad de muestras almacenadas en cada nodo.
     """
     
-    def __init__(self, dato = T, atributo: str = None, es_hoja: bool = False):
+    def __init__(self, dato = T, label: T = None, atributo: str = None, es_hoja: bool = False):
         super().__init__(dato) 
+        self.label = label
         self._es_hoja = es_hoja
         self._hijos = {}
         self._atributo = atributo
@@ -39,7 +43,7 @@ class ArbolID3(Arbol):
     def __str__(self, nivel=0) -> str:
         espacio_indentado = "    " * nivel
         if self._es_hoja:
-            return f"{espacio_indentado}[Hoja: {self.dato}, Samples: {self._num_samples}]\n"
+            return f"{espacio_indentado}[Hoja: {self.label}, Samples: {self._num_samples}]\n"
         else:
             nombre_atributo = self._atributo
             resultado = f"{espacio_indentado}[Atributo: {nombre_atributo}, Samples: {self._num_samples}]\n"
@@ -106,28 +110,28 @@ class ArbolID3(Arbol):
         # Criterio de parada: Nodo puro 
         if len(np.unique(y)) == 1:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolID3(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
             
         # Criterio de parada: Maxima profundidad
         if profundidad_max is not None and profundidad_actual >= profundidad_max:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolID3(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Mínimas observaciones por nodo
         if minimas_obs_n is not None and len(y) < minimas_obs_n:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolID3(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Sin atributos para dividir
         if not indice_atributos:  
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolID3(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
@@ -137,7 +141,7 @@ class ArbolID3(Arbol):
         # Criterio de parada: Ganancia mínima
         if ganancia_minima is not None and ganancias[np.argmax(ganancias)] < ganancia_minima:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolID3(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
     
@@ -158,9 +162,9 @@ class ArbolID3(Arbol):
             sub_y = y[indices]
 
             # Criterio de parada: Mínimas observaciones por hoja
-            if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
+            if minimas_obs_h is not None and len(sub_y) < minimas_obs_h:
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                subarbol = ArbolID3(clase_mayoritaria, atributo=None, es_hoja=True)
+                subarbol = ArbolID3(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
                 subarbol._num_samples = len(sub_y)
                 return subarbol
             else:

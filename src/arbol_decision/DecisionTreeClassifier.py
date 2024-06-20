@@ -117,7 +117,7 @@ class DecisionTreeClassifier:
         def _predict_instancia(instancia: np.ndarray, nodo_actual: self.algoritmo) -> T:
 
             if nodo_actual._es_hoja:
-                return nodo_actual.dato
+                return nodo_actual.label
             
             atributo = nodo_actual.dato
             valor = instancia[atributo]
@@ -135,7 +135,7 @@ class DecisionTreeClassifier:
                     return _predict_instancia(instancia, nodo_actual._hijos[valor])
                 else:
                     # Si el valor no se encuentra en los hijos, retornamos la clase mayoritaria del nodo actual
-                    clases = [nodo.dato for nodo in nodo_actual._hijos.values() if nodo._es_hoja]
+                    clases = [nodo.label for nodo in nodo_actual._hijos.values() if nodo._es_hoja]
                     # Si la lista de clases está vacía, devuelve la clase mayoritaria de todo el conjunto de entrenamiento y
                     if not clases: 
                         return self.algoritmo.clase_mayoritaria(self._y)
@@ -145,7 +145,30 @@ class DecisionTreeClassifier:
                 raise ValueError("Tipo de atributo desconocido")
           
         predicciones = [_predict_instancia(instancia, self._arbol) for instancia in X_array]
+        print(predicciones)
         return predicciones
+    
+
+    def get_params(self):
+        return self.__dict__
+    
+    def set_params(self, **params):
+        for key, value in params.items():
+            if hasattr(self,key):
+                setattr(self,key,value)
+            else:
+                raise ValueError(f"{key} no es un atributo valido")
+            
+    def score(self, X, y):
+        X_array = np.asarray(X)
+        y_array = np.asarray(y)
+        if len(X_array) == len(y_array):
+            pred = self.predict(X_array)
+            acc = sum(p == t for p,t in zip(pred,y_array))
+            accuracy = acc / len(y_array)
+            return accuracy
+        else:
+            raise ValueError("Debe haber la cantidad de instancias en los features que en el target")
     
 
 

@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from arbol_decision.ArbolC4_5 import ArbolC4_5
 from arbol_decision.ArbolID3 import ArbolID3
@@ -45,7 +46,9 @@ def main_interactivo():
 
 def id3_DecisionTree():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/tratamiento.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/tratamiento.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     input("Presione Enter para continuar...")
@@ -82,7 +85,9 @@ def id3_DecisionTree():
 
 def c45_DecisionTree_continuos():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/star.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/star.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     input("Presione Enter para continuar...")
@@ -128,7 +133,9 @@ def c45_DecisionTree_continuos():
 
 def id3_RandomForest():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/tratamiento.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/tratamiento.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     input("Presione Enter para continuar...")
@@ -163,7 +170,9 @@ def id3_RandomForest():
 
 def c45_RandomForest_continuos():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/star.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/star.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     input("Presione Enter para continuar...")
@@ -197,7 +206,9 @@ def c45_RandomForest_continuos():
 
 def c45_DecisionTree():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/heart.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/heart.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     input("Presione Enter para continuar...")
@@ -235,7 +246,9 @@ def c45_DecisionTree():
 
 def c45_RandomForest():
     print("Dataset elegido:")
-    df = pd.read_csv("C:/Users/naiar/OneDrive/Documentos/Unsam/CIENCIA DE DATOS/CUATRIMESTRE_4/ALGORITMOS_2/trabajo_final/datasets/heart.csv")
+    directorio_actual = os.getcwd()
+    ruta_archivo = os.path.join(directorio_actual,"datasets/heart.csv")
+    df = pd.read_csv(ruta_archivo)
     print(df)
 
     input("Presione Enter para continuar...")

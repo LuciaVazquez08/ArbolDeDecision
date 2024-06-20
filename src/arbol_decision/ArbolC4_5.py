@@ -14,6 +14,9 @@ class ArbolC4_5(Arbol):
     ----------
     dato : T 
         El dato almacenado en el nodo del árbol.
+    
+    label : T, default=None
+        Es la clase mayoritaria del nodo.
 
     atributo : str, default=None
         El atributo utilizado para dividir el conjunto de datos en el nodo actual.
@@ -30,8 +33,9 @@ class ArbolC4_5(Arbol):
         La cantidad de muestras almacenadas en cada nodo.
     """
     
-    def __init__(self, dato = T, atributo: str = None, es_hoja: bool = False):
+    def __init__(self, dato = T, label: T = None, atributo: str = None, es_hoja: bool = False):
         super().__init__(dato) 
+        self.label = label
         self._es_hoja = es_hoja
         self._hijos = {}
         self._atributo = atributo
@@ -40,7 +44,7 @@ class ArbolC4_5(Arbol):
     def __str__(self, nivel=0) -> str:
         espacio_indentado = "    " * nivel
         if self._es_hoja:
-            return f"{espacio_indentado}[Hoja: {self.dato}, Samples: {self._num_samples}]\n"
+            return f"{espacio_indentado}[Hoja: {self.label}, Samples: {self._num_samples}]\n"
         else:
             nombre_atributo = self._atributo
             resultado = f"{espacio_indentado}[Atributo: {nombre_atributo}, Samples: {self._num_samples}]\n"
@@ -107,28 +111,28 @@ class ArbolC4_5(Arbol):
         # Criterio de parada: Nodo puro 
         if len(np.unique(y)) == 1:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolC4_5(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
             
         # Criterio de parada: Maxima profundidad
         if profundidad_max is not None and profundidad_actual >= profundidad_max:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolC4_5(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Mínimas observaciones por nodo
         if minimas_obs_n is not None and len(y) < minimas_obs_n:
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolC4_5(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
         
         # Criterio de parada: Sin atributos para dividir
         if not indice_atributos:  
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolC4_5(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
 
@@ -138,7 +142,7 @@ class ArbolC4_5(Arbol):
         # Criterio de parada: Ganancia mínima (verifica si la ganancia supera el umbral mínimo)
         if ganancia_minima is not None and np.all(mejor_ganancia < ganancia_minima):
             clase_mayoritaria = cls.clase_mayoritaria(y)
-            hoja = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+            hoja = ArbolC4_5(None, label = clase_mayoritaria, atributo=None, es_hoja=True)
             hoja._num_samples = len(y)
             return hoja
 
@@ -163,7 +167,7 @@ class ArbolC4_5(Arbol):
             # Criterio de parada: Mínimas observaciones por hoja (no anda)
             if minimas_obs_h is not None and minimas_obs_h > len(sub_y_izq): 
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y_izq)
-                sub_arbol_izq = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+                sub_arbol_izq = ArbolC4_5(None,label= clase_mayoritaria, atributo=None, es_hoja=True)
                 sub_arbol_izq._num_samples = len(sub_y_izq)
                 return sub_arbol_izq
             else:
@@ -173,7 +177,7 @@ class ArbolC4_5(Arbol):
             # Criterio de parada: Mínimas observaciones por hoja (no anda)
             if minimas_obs_h is not None and minimas_obs_h > len(sub_y_der): 
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y_der)
-                sub_arbol_der = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+                sub_arbol_der = ArbolC4_5(None,label= clase_mayoritaria, atributo=None, es_hoja=True)
                 sub_arbol_der._num_samples = len(sub_y_der)
                 return sub_arbol_der
             else:
@@ -196,7 +200,7 @@ class ArbolC4_5(Arbol):
                 # Criterio de parada: Mínimas observaciones por hoja
                 if minimas_obs_h is not None and minimas_obs_h > len(sub_y):
                     clase_mayoritaria = cls.clase_mayoritaria(sub_y)
-                    subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
+                    subarbol = ArbolC4_5(None,label= clase_mayoritaria, atributo=None, es_hoja=True)
                     subarbol._num_samples = len(sub_y)
                     return subarbol
                 else:
