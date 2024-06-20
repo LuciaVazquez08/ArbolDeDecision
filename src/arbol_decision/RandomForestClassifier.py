@@ -188,9 +188,9 @@ class RandomForestClassifier:
         y_array = np.array(y)
         if len(X_array) == len(y_array):
 
-            # Completamos los valores faltantes
-            if isinstance(self.algoritmo, ArbolC4_5):
-                X_array = self.algoritmo.imputar_valores_faltantes(X_array)
+            # Completamos los valores faltantes si los hay
+            if self.algoritmo == ArbolC4_5:
+                X_array = ArbolC4_5.imputar_valores_faltantes(X_array, self.top_atributos, self.umbral)
                 
             if self.bootstrap:
                 muestras = RandomForestClassifier.bootstraping(X_array, y_array, self.n_estimadores)

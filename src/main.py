@@ -60,7 +60,7 @@ def id3_DecisionTree():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = DecisionTreeClassifier(algoritmo=ArbolID3, minimas_obs_h=3)
+    classifier = DecisionTreeClassifier(algoritmo=ArbolID3)
     classifier.fit(X_train, y_train)
     print(classifier._arbol)
 
@@ -106,14 +106,14 @@ def c45_DecisionTree_continuos():
     input("Vamos a usar una profundidad máxima = 3 y mínimas observaciones por nodo = 35:")
 
     # Creamos y entrenamos el clasificador de árbol de decisión con hiperparámetros
-    classifier = DecisionTreeClassifier(algoritmo = ArbolC4_5, profundidad_max=3, minimas_obs_n=35)
-    classifier.fit(X_train, y_train)
-    print(classifier._arbol)
+    classifier_hiper = DecisionTreeClassifier(algoritmo = ArbolC4_5, profundidad_max=3, minimas_obs_n=35)
+    classifier_hiper.fit(X_train, y_train)
+    print(classifier_hiper._arbol)
 
     input("Ahora vamos a ver las métricas:")
 
     # Evaluamos el modelo
-    y_pred = classifier.predict(X_test)
+    y_pred = classifier_hiper.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred, average= 'weighted')
     recall = recall_score(y_test, y_pred, average= 'weighted')

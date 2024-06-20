@@ -1,6 +1,6 @@
 from arbol_decision.ArbolID3 import ArbolID3
 from arbol_decision.ArbolC4_5 import ArbolC4_5
-from pandas import DataFrame
+import pandas as pd
 import numpy as np
 from typing import Generic, TypeVar
 T = TypeVar('T')
@@ -65,7 +65,7 @@ class DecisionTreeClassifier:
         self._arbol = None
 
 
-    def fit(self, X: DataFrame, y: DataFrame) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.DataFrame) -> None:
         """
         Entrena un árbol de decisión a partir del conjunto de entrenamiento (X, y).
 
@@ -84,11 +84,12 @@ class DecisionTreeClassifier:
         X_array = np.array(X)
         y_array = np.array(y)
         self._y = y_array  
+        
         if len(X_array) == len(y_array):
             
-            # Completamos los valores faltantes
-            if isinstance(self.algoritmo, ArbolC4_5):
-                X_array = self.algoritmo.imputar_valores_faltantes(X_array)
+            # Completamos los valores faltantes si los hay
+            if self.algoritmo == ArbolC4_5:
+                X_array = ArbolC4_5.imputar_valores_faltantes(X_array, self.top_atributos, self.umbral)
 
             indice_atributos = list(range(X_array.shape[1]))
             nombres_atributos = X.columns.tolist()
@@ -98,7 +99,7 @@ class DecisionTreeClassifier:
         else:
             raise ValueError("Debe haber la misma cantidad de instancias en X y en y")
         
-    def predict(self, X: DataFrame) -> list[T]:
+    def predict(self, X: pd.DataFrame) -> list[T]:
         """
         Realiza la predicción del conjunto de datos de entrada utilizando el DecisionTreeClassifier entrenado.
 

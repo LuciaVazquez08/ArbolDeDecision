@@ -165,6 +165,7 @@ class ArbolC4_5(Arbol):
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y_izq)
                 sub_arbol_izq = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
                 sub_arbol_izq._num_samples = len(sub_y_izq)
+                return sub_arbol_izq
             else:
                 sub_arbol_izq = cls.construir(sub_X_izq, sub_y_izq, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
 
@@ -174,6 +175,7 @@ class ArbolC4_5(Arbol):
                 clase_mayoritaria = cls.clase_mayoritaria(sub_y_der)
                 sub_arbol_der = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
                 sub_arbol_der._num_samples = len(sub_y_der)
+                return sub_arbol_der
             else:
                 sub_arbol_der = cls.construir(sub_X_der, sub_y_der, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
 
@@ -196,6 +198,7 @@ class ArbolC4_5(Arbol):
                     clase_mayoritaria = cls.clase_mayoritaria(sub_y)
                     subarbol = ArbolC4_5(clase_mayoritaria, atributo=None, es_hoja=True)
                     subarbol._num_samples = len(sub_y)
+                    return subarbol
                 else:
                     subarbol = cls.construir(sub_X, sub_y, tipos_atributos, atributos_restantes, nombres_atributos, profundidad_max, minimas_obs_n, minimas_obs_h, ganancia_minima, profundidad_actual + 1)
                     
@@ -252,34 +255,52 @@ class ArbolC4_5(Arbol):
 
         return mejor_atributo, mejor_umbral, mejor_ganancia
     
-    # AGREGAR DOCS
-    def imputar_valores_faltantes(self, X: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def imputar_valores_faltantes(X: np.ndarray, top_n: int, umbral: float) -> np.ndarray:
            
-            X_imputado = X.copy()
+        """
+        Imputa los valores faltantes en la matriz de características X.
 
-            for atributo in range(X.shape[1]):
-                columna_atributo = X[:, atributo]
-                valores_faltantes = pd.isnull(columna_atributo)  
+        Parámetros
+        ----------
+        X : np.ndarray
+            Matriz de características del conjunto de datos.
 
-                if np.any(valores_faltantes):
-                    tipo_atributo = self.determinar_tipo_atributo(columna_atributo[~valores_faltantes], top_n=3, umbral=0.8)
-
-                    if tipo_atributo == "categorico":
+        top_n : int
+            Número de valores más frecuentes a considerar para calcular la proporción.
             
-                        valores_clase = Counter(columna_atributo[~valores_faltantes])
-                        valor_mas_comun = max(valores_clase, key=valores_clase.get)
-                        X_imputado[valores_faltantes, atributo] = valor_mas_comun
-                    elif tipo_atributo == "continuo":
-                    
-                        media_atributo = np.nanmean(columna_atributo[~valores_faltantes].astype(float))
-                        media_atributo = round(float(media_atributo), 2)  
-                        X_imputado[valores_faltantes, atributo] = media_atributo
+        umbral : float
+            Umbral de proporción para decidir si el atributo es categórico o continuo.
 
-            print("Conjunto de datos después de imputar valores faltantes:")
-            print(X_imputado)
+        Returns
+        -------
+        np.ndarray
+            Matriz de características con los valores faltantes imputados.
+        """
+        
+        X_imputado = X.copy()
 
-            return X_imputado
-    
+        for atributo in range(X.shape[1]):
+            columna_atributo = X[:, atributo]
+            valores_faltantes = pd.isna(columna_atributo)  
+
+            if np.any(valores_faltantes):
+                tipo_atributo = ArbolC4_5.determinar_tipo_atributo(columna_atributo[~valores_faltantes], top_n, umbral)
+
+                if tipo_atributo == "categorico":
+        
+                    valores_clase = Counter(columna_atributo[~valores_faltantes])
+                    valor_mas_comun = max(valores_clase, key=valores_clase.get)
+                    X_imputado[valores_faltantes, atributo] = valor_mas_comun
+
+                elif tipo_atributo == "continuo":
+                
+                    media_atributo = np.nanmean(columna_atributo[~valores_faltantes].astype(float))
+                    media_atributo = round(float(media_atributo), 2)  
+                    X_imputado[valores_faltantes, atributo] = media_atributo
+
+        return X_imputado
+
     
     @staticmethod
     def determinar_tipo_atributo(atributo: np.ndarray, top_n: int, umbral: float) -> str:
