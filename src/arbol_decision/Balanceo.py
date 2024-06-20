@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import OneHotEncoder
 class Balanceo:
     @staticmethod
     def calcular_distancia(x1, x2):
@@ -53,27 +54,58 @@ class Balanceo:
         
         return X_filtrado, y_filtrado
     
-    @staticmethod
+    # @staticmethod
+    # def tomek_links(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
+    #     n_samples = X.shape[0]
+
+    #     encoder = OneHotEncoder()
+    #     X_encoded = encoder.fit_transform(X)
+
+    #     vecinos = NearestNeighbors(n_neighbors=2).fit(X_encoded)
+    #     indices = vecinos.kneighbors(X_encoded, return_distance=False)
+
+    #     indices = set()
+        
+    #     for i in range(n_samples):
+    #         for j in range(1, 2):  
+    #             if y[i] != y[indices[i][j]]:  
+    #                 if indices[indices[i][j]][1] == i: 
+    #                     indices.add(i)
+    #                     indices.add(indices[i][j])
+
+    #     X_filtrado = np.delete(X, list(indices), axis=0)
+    #     y_filtrado = np.delete(y, list(indices))
+        
+    #     return X_filtrado, y_filtrado
+    
     def tomek_links(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
-        # Identificar los índices de las muestras de diferentes clases
         n_samples = X.shape[0]
-        neighbors = NearestNeighbors(n_neighbors=2).fit(X)
-        indices = neighbors.kneighbors(X, return_distance=False)
-        
-        toremove_indices = set()
-        
+
+        encoder = OneHotEncoder()
+        X_encoded = encoder.fit_transform(X)
+
+        # Step 1: Find nearest neighbors
+        vecinos = NearestNeighbors(n_neighbors=2).fit(X_encoded)
+        indices = vecinos.kneighbors(X_encoded, return_distance=False)
+
+        # Step 2: Identify Tomek links
+        indices_to_keep = set()
+
         for i in range(n_samples):
-            for j in range(1, 2):  # Solo el vecino más cercano
-                if y[i] != y[indices[i][j]]:  # Verificar si son de clases diferentes
-                    if indices[indices[i][j]][1] == i:  # Verificar enlace bidireccional
-                        toremove_indices.add(i)
-                        toremove_indices.add(indices[i][j])
-        
-        # Eliminar las muestras que forman enlaces de Tomek
-        X_filtrado = np.delete(X, list(toremove_indices), axis=0)
-        y_filtrado = np.delete(y, list(toremove_indices))
-        
-        return X_filtrado, y_filtrado
+            for j in range(1, 2):  # j starts from 1 because index 0 is the sample itself
+                neighbor_index = indices[i][j]
+                
+                if y[i] != y[neighbor_index]:
+                    if indices[neighbor_index][1] == i:  # Check if i is the nearest neighbor of neighbor_index
+                        indices_to_keep.add(i)
+                        indices_to_keep.add(neighbor_index)
+
+        # Step 3: Filter X and y based on identified indices
+        indices_to_keep = list(indices_to_keep)
+        X_filtered = np.delete(X, indices_to_keep, axis=0)
+        y_filtered = np.delete(y, indices_to_keep)
+
+        return X_filtered, y_filtered
 
     @staticmethod
     def nearmiss(X, y):
@@ -108,84 +140,33 @@ class Balanceo:
                 undersampled_y.append(clase)
         
         return np.array(undersampled_X), np.array(undersampled_y)
-    
-    @staticmethod
-    def smote(X, y):
+
+    def nearmiss_categorico(X, y):
+        instancia_cercana = defaultdict(list)
         clases = np.unique(y)
         
-        n_clase_mayoritaria = 0
-
-        for clase in clases:
-            instancias = np.where(y== clase)[0]
-            if len(instancias) > :
-
+        encoder = OneHotEncoder()
+        X_encoded = encoder.fit_transform(X)
+        nn = NearestNeighbors(n_neighbors=1)
+        nn.fit(X_encoded)
         
-        X_resampled = X.copy()
-        y_resampled = y.copy()
+        distances, indices = nn.kneighbors(X_encoded)
+        for i, clase in enumerate(clases):
+            nearest_index = indices[i][0] 
+            nearest_class = y[nearest_index]  
+            
+            if clase != nearest_class:
+                instancia_cercana[clase].append((X[i], nearest_class))
         
-        for clase in clases:
-            instancias = np.where(y == clase)[0]
-            if len(instancias) < n_clase_mayoritaria:
-                n_muestras_necesarias = n_clase_mayoritaria - len(instancias)
-                X_clase = X[instancias]
-                
-                nn = NearestNeighbors(n_neighbors=6)
-                nn.fit(X_clase)
-                neighbors = nn.kneighbors(X_clase, return_distance=False)[:, 1:]
-                
-                synthetic_samples = []
-                for _ in range(n_muestras_necesarias):
-                    idx = np.random.choice(range(len(X_clase)))
-                    neighbor_indices = neighbors[idx]
-                    
-                    synthetic_instance = np.array([
-                        np.random.choice(X_clase[neighbor_indices, col]) for col in range(X_clase.shape[1])
-                    ])
-                    
-                    synthetic_samples.append(synthetic_instance)
-                
-                synthetic_samples = np.array(synthetic_samples)  # Convertir a array NumPy
-                
-                X_resampled = np.vstack((X_resampled, synthetic_samples))
-                y_resampled = np.hstack((y_resampled, np.array([clase] * n_muestras_necesarias)))
+        undersampled_X = []
+        undersampled_y = []
         
-        return X_resampled, y_resampled
+        for clase, samples in instancia_cercana.items():
+            for sample, nearest_class in samples:
+                undersampled_X.append(sample)
+                undersampled_y.append(clase)
+        
+        return np.array(undersampled_X), np.array(undersampled_y)
 
-# if __name__ == "__main__":
-#     data = {
-#         'feature1': ['A', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C'],
-#         'feature2': ['X', 'Y', 'X', 'Z', 'Y', 'X', 'Z', 'Y', 'X', 'Z'],
-#         'feature3': ['M', 'N', 'M', 'O', 'N', 'M', 'O', 'N', 'M', 'O'],
-#         'feature4': ['P', 'Q', 'P', 'R', 'Q', 'P', 'R', 'Q', 'P', 'R'],
-#         'feature5': ['S', 'T', 'S', 'U', 'T', 'S', 'U', 'T', 'S', 'U'],
-#         'feature6': ['V', 'W', 'V', 'X', 'W', 'V', 'X', 'W', 'V', 'X'],
-#         'target':  [0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
-#     }
-
-#     df = pd.DataFrame(data)
-
-#     X = df.drop('target', axis=1).values
-#     y = df['target'].values
-
-#     balance = df['TargetClass'].value_counts() 
-#     print(balance)
-
-#     X = df.drop(['TargetClass', 'SpType'], axis=1)
-#     y = df[['TargetClass']]
-
-#     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-#     classifier = RandomForestClassifier(algoritmo = "C4.5", tecnica_balanceo="TomekLinks")
-#     classifier.fit(X_train, y_train)
-
-#     # Evaluamos el modelo
-#     y_pred = classifier.predict(X_test)
-
-#     accuracy = accuracy_score(y_test, y_pred)
-#     precision = recall_score(y_test, y_pred, average= 'weighted')
-#     recall = f1_score(y_test, y_pred, average= 'weighted')
-#     matriz = confusion_matrix(y_test, y_pred)
-#     print(f'Accuracy: {accuracy}')
-#     print(f'Precision: {precision}')
-#     print(f'Recall: {recall}')
-#     print(f'{matriz}')
+    
+    

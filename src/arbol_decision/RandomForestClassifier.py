@@ -53,9 +53,6 @@ class RandomForestClassifier:
     tecnica balanceo : str, default=None
         .......................
 
-    class_weight : str | dict, default=None
-        .........................
-
     Atributos
     ---------
     _arboles : list[DecisionTreeClassifier]
@@ -74,7 +71,6 @@ class RandomForestClassifier:
                  bootstrap: bool = True,
                  feature_selection_method: str = "sqrt",
                  tecnica_balanceo: str = None,
-                 class_weight: str | dict = None
                 ):
         self.algoritmo = algoritmo
         self.profundidad_max = profundidad_max
@@ -87,7 +83,6 @@ class RandomForestClassifier:
         self.n_estimadores = n_estimadores
         self.bootstrap = bootstrap
         self.feature_selection_method = feature_selection_method
-        self.class_weight = class_weight
         self.tecnica_balanceo = tecnica_balanceo
         self._arboles: list[DecisionTreeClassifier] = [] 
 
@@ -211,10 +206,13 @@ class RandomForestClassifier:
                     X_array, y_array = Balanceo.random_oversample(X_array,y_array)
                 elif self.tecnica_balanceo == "TomekLinks":
                     X_array, y_array = Balanceo.tomek_links(X_array,y_array)
-                elif self.tecnica_balanceo == "SMOTE":
-                    X_array, y_array = Balanceo.smote(X_array,y_array)
                 elif self.tecnica_balanceo == "NearMiss":
-                    X_array, y_array = Balanceo.nearmiss(X_array,y_array)
+                    if self.algoritmo == ArbolC4_5:
+                        X_array, y_array = Balanceo.nearmiss(X_array,y_array)
+                    elif self.algoritmo == ArbolID3:
+                        X_array, y_array = Balanceo.nearmiss_categorico(X_array, y_array)
+                    else:
+                        raise ValueError("Los algoritmos validos son ArbolID3 y ArbolC4_5")
                 else:
                     raise ValueError("las opciones validas son RandomUnder, RandomOver, TomekLinks, SMOTE y Nearmiss")
                 
@@ -287,8 +285,8 @@ class RandomForestClassifier:
         return prob
 
     def score(self, X,y):
-        X_array = np.asarray(X)
-        y_array = np.asarray(y)
+        X_array = np.array(X)
+        y_array = np.array(y)
         if len(X_array) == len(y_array):
             pred = self.predict(X_array)
             acc = sum(p == t for p,t in zip(pred,y_array))

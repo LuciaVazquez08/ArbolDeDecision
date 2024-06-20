@@ -15,10 +15,10 @@ def main_interactivo():
         print("\nSelecciona una opción:")
         print("1. Funcionamiento del ID3 con DecisionTreeClassifier")
         print("2. Funcionamiento del C4.5 con DecisionTreeClassifier (solo atributos continuos)")
-        print("3. Funcionamiento del ID3 con RandomForest")
-        print("4. Funcionamiento del C4.5 con RandomForest (solo atributos continuos)")
+        print("3. Funcionamiento del ID3 con RandomForestClassifier")
+        print("4. Funcionamiento del C4.5 con RandomForestClassifier (solo atributos continuos)")
         print("5. Funcionamiento del C4.5 con DecisionTreeClassifier")
-        print("6. Funcionamiento del C4.5 con RandomForest")
+        print("6. Funcionamiento del C4.5 con RandomForestClassifier")
         print("7. Salir")
 
         opcion = input("Ingrese el número de la tarea que desea realizar: ")

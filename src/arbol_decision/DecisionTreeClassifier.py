@@ -148,7 +148,6 @@ class DecisionTreeClassifier:
         print(predicciones)
         return predicciones
     
-
     def get_params(self):
         return self.__dict__
     
