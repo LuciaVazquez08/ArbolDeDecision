@@ -6,6 +6,23 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
 class Balanceo:
     @staticmethod
+    def calcular_distancia(x1, x2):
+        """
+        Calcula la distiancia 
+
+        Parámetros
+        ----------
+        X: DataFrame
+            Las muestras de entrada para las cuales se realizarán las predicciones.
+
+        Returns
+        -------
+        list[T] : Devuelve una lista con las predicciones para cada instancia de X, combinando las predicciones de cada árbol entrenado.
+
+        """
+        return np.linalg.norm(x1 - x2)
+
+    @staticmethod
     def random_undersample(X: np.ndarray, y: np.ndarray) -> (np.ndarray , np.ndarray):
         """
         Elimina filas de datos de manera aleatoria para que la cantidad de instancias de cada clase sea la misma.
@@ -177,7 +194,7 @@ class Balanceo:
                         indices_clase = np.where(y == label)[0]
                         instancia_clase = X[indices_clase]
                         for sample in instancia_clase:
-                            distancia = np.linalg.norm(instancia, sample)
+                            distancia = Balanceo.calcular_distancia(instancia, sample)
                             distancias.append((distancia, label))
                 
                 distancias.sort()
