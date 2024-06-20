@@ -2,180 +2,191 @@ import numpy as np
 import os
 import pandas as pd
 from collections import defaultdict
-
+from sklearn.neighbors import NearestNeighbors
 class Balanceo:
     @staticmethod
     def calcular_distancia(x1, x2):
         return np.linalg.norm(x1 - x2)
 
     @staticmethod
-    def random_undersample(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
-        target_classes = np.unique(y)
-        keep_indices = []
+    def random_undersample(X: np.ndarray, y: np.ndarray) -> (np.ndarray , np.ndarray):
+        clases_target = np.unique(y)
+        indices = []
         state = np.random.RandomState(42)
 
-        size = np.inf
-        for target_class in target_classes:
-            class_indices = np.where(y == target_class)[0]
-            class_size = len(class_indices)
-            if class_size < size:
-                size = class_size
+        tamaño = np.inf
+        for clase in clases_target:
+            indices_clase = np.where(y == clase)[0]
+            tamaño_clase = len(indices_clase)
+            if tamaño_clase < tamaño:
+                tamaño = tamaño_clase
         
-        for target_class in target_classes:
-            target_indices = np.where(y == target_class)[0]
-            keep_index = state.choice(target_indices, size=size, replace=False)
-            keep_indices.extend(keep_index)
+        for clase in clases_target:
+            target_indices = np.where(y == clase)[0]
+            indx = state.choice(target_indices, size= tamaño, replace=False)
+            indices.extend(indx)
         
-        filtered_X = X[keep_indices, :]
-        filtered_y = y[keep_indices, :]
+        X_filtrado = X[indices, :]
+        y_filtrado = y[indices, :]
         
-        return filtered_X, filtered_y
+        return X_filtrado, y_filtrado
 
-    def random_oversample(X, y, target_classes=None, oversampling_ratio=1.0):
-        target_classes = np.unique(y)
-        keep_indices = []
+    def random_oversample(X: np.ndarray, y: np.ndarray) -> (np.ndarray , np.ndarray):
+        clases_target = np.unique(y)
+        indices = []
         state = np.random.RandomState(42)
 
-        size = -np.inf
-        for target_class in target_classes:
-            class_indices = np.where(y == target_class)[0]
-            class_size = len(class_indices)
-            if class_size > size:
-                size = class_size
+        tamaño = -np.inf
+        for clase in clases_target:
+            indices_clase = np.where(y == clase)[0]
+            tamaño_clase = len(indices_clase)
+            if tamaño_clase > tamaño:
+                tamaño = tamaño_clase
         
-        for target_class in target_classes:
-            target_indices = np.where(y == target_class)[0]
-            keep_index = state.choice(target_indices, size=size, replace=True)
-            keep_indices.extend(keep_index)
+        for clase in clases_target:
+            target_indices = np.where(y == clase)[0]
+            indx = state.choice(target_indices, size=tamaño, replace=True)
+            indices.extend(indx)
         
-        filtered_X = X[keep_indices, :]
-        filtered_y = y[keep_indices, :]
+        X_filtrado = X[indices, :]
+        y_filtrado = y[indices, :]
         
-        return filtered_X, filtered_y
+        return X_filtrado, y_filtrado
     
     @staticmethod
-    def tomek_links(X, y):
-        minority_classes = np.unique(y)
+    def tomek_links(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
+        # Identificar los índices de las muestras de diferentes clases
+        n_samples = X.shape[0]
+        neighbors = NearestNeighbors(n_neighbors=2).fit(X)
+        indices = neighbors.kneighbors(X, return_distance=False)
         
         toremove_indices = set()
         
-        for minority_class in minority_classes:
-            minority_indices = np.where(y == minority_class)[0]
-            minority_samples = X[minority_indices]
-            
-            for i, minority_sample in enumerate(minority_samples):
-                min_dist = float('inf')
-                min_dist_idx = None
-                for class_label in np.unique(y):
-                    if class_label != minority_class:
-                        class_indices = np.where(y == class_label)[0]
-                        class_samples = X[class_indices]
-                        for class_sample in class_samples:
-                            distance = Balanceo.calcular_distancia(minority_sample, class_sample)
-                            if distance < min_dist:
-                                min_dist = distance
-                                min_dist_idx = i
-                
-                if min_dist_idx is not None:
-                    toremove_indices.add(minority_indices[min_dist_idx])
+        for i in range(n_samples):
+            for j in range(1, 2):  # Solo el vecino más cercano
+                if y[i] != y[indices[i][j]]:  # Verificar si son de clases diferentes
+                    if indices[indices[i][j]][1] == i:  # Verificar enlace bidireccional
+                        toremove_indices.add(i)
+                        toremove_indices.add(indices[i][j])
         
-        filtered_X = np.delete(X, list(toremove_indices), axis=0)
-        filtered_y = np.delete(y, list(toremove_indices))
+        # Eliminar las muestras que forman enlaces de Tomek
+        X_filtrado = np.delete(X, list(toremove_indices), axis=0)
+        y_filtrado = np.delete(y, list(toremove_indices))
         
-        return filtered_X, filtered_y
+        return X_filtrado, y_filtrado
 
     @staticmethod
-    def nearmiss(X, y, n_neighbors=1):
-        nearest_samples = defaultdict(list)
+    def nearmiss(X, y):
+        instancia_cercana = defaultdict(list)
+        clases = np.unique(y)
         
-        minority_classes = np.unique(y)
-        
-        for minority_class in minority_classes:
-            minority_indices = np.where(y == minority_class)[0]
-            minority_samples = X[minority_indices]
+        for clase in clases:
+            index = np.where(y == clase)[0]
+            instancias = X[index]
             
-            for minority_sample in minority_samples:
-                distances = []
-                for class_label in np.unique(y):
-                    if class_label != minority_class:
-                        class_indices = np.where(y == class_label)[0]
-                        class_samples = X[class_indices]
-                        for class_sample in class_samples:
-                            distance = Balanceo.calcular_distancia(minority_sample, class_sample)
-                            distances.append((distance, class_label))
+            for instancia in instancias:
+                distancias = []
+                for label in np.unique(y):
+                    if label != clase:
+                        indices_clase = np.where(y == label)[0]
+                        instancia_clase = X[indices_clase]
+                        for sample in instancia_clase:
+                            distancia = Balanceo.calcular_distancia(instancia, sample)
+                            distancias.append((distancia, label))
                 
-                distances.sort()
-                nearest_neighbors = distances[:n_neighbors]
+                distancias.sort()
+                vecino_mas_cercano = distancias[:1]
                 
-                for distance, nearest_class in nearest_neighbors:
-                    nearest_samples[minority_class].append((minority_sample, nearest_class))
+                for distancia, nearest_class in vecino_mas_cercano:
+                    instancia_cercana[clase].append((instancia, nearest_class))
         
         undersampled_X = []
         undersampled_y = []
-        for minority_class, samples in nearest_samples.items():
+        for clase, samples in instancia_cercana.items():
             for sample, nearest_class in samples:
                 undersampled_X.append(sample)
-                undersampled_y.append(minority_class)
+                undersampled_y.append(clase)
         
         return np.array(undersampled_X), np.array(undersampled_y)
     
     @staticmethod
-    def smote(X, y, k_neighbors=5, oversampling_ratio=1.0):
-        minority_classes = np.unique(y)
+    def smote(X, y):
+        clases = np.unique(y)
         
-        synthetic_samples_per_class = defaultdict(int)
-        for minority_class in minority_classes:
-            minority_samples_count = np.sum(y == minority_class)
-            synthetic_samples_count = int(minority_samples_count * oversampling_ratio) - minority_samples_count
-            synthetic_samples_per_class[minority_class] = synthetic_samples_count
+        n_clase_mayoritaria = 0
+
+        for clase in clases:
+            instancias = np.where(y== clase)[0]
+            if len(instancias) > :
+
         
-        synthetic_X = []
-        synthetic_y = []
+        X_resampled = X.copy()
+        y_resampled = y.copy()
         
-        for minority_class in minority_classes:
-            minority_indices = np.where(y == minority_class)[0]
-            
-            minority_samples = X[minority_indices]
-            
-            for minority_sample in minority_samples:
-                distances = []
-                for class_label in np.unique(y):
-                    if class_label != minority_class:
-                        class_indices = np.where(y == class_label)[0]
-                        class_samples = X[class_indices]
-                        for class_sample in class_samples:
-                            distance = Balanceo.calcular_distancia(minority_sample, class_sample)
-                            distances.append((distance, class_label))
+        for clase in clases:
+            instancias = np.where(y == clase)[0]
+            if len(instancias) < n_clase_mayoritaria:
+                n_muestras_necesarias = n_clase_mayoritaria - len(instancias)
+                X_clase = X[instancias]
                 
-                distances.sort()
-                nearest_neighbors = distances[:k_neighbors]
+                nn = NearestNeighbors(n_neighbors=6)
+                nn.fit(X_clase)
+                neighbors = nn.kneighbors(X_clase, return_distance=False)[:, 1:]
                 
-                selected_neighbor_index = np.random.randint(0, k_neighbors)
-                selected_neighbor = nearest_neighbors[selected_neighbor_index]
-                selected_neighbor_sample = minority_sample + (selected_neighbor[0] / 2) * (selected_neighbor[1] - minority_class)
+                synthetic_samples = []
+                for _ in range(n_muestras_necesarias):
+                    idx = np.random.choice(range(len(X_clase)))
+                    neighbor_indices = neighbors[idx]
+                    
+                    synthetic_instance = np.array([
+                        np.random.choice(X_clase[neighbor_indices, col]) for col in range(X_clase.shape[1])
+                    ])
+                    
+                    synthetic_samples.append(synthetic_instance)
                 
-                synthetic_X.append(selected_neighbor_sample)
-                synthetic_y.append(minority_class)
+                synthetic_samples = np.array(synthetic_samples)  # Convertir a array NumPy
+                
+                X_resampled = np.vstack((X_resampled, synthetic_samples))
+                y_resampled = np.hstack((y_resampled, np.array([clase] * n_muestras_necesarias)))
         
-        synthetic_X = np.vstack((X, np.array(synthetic_X)))
-        synthetic_y = np.hstack((y, np.array(synthetic_y)))
-        
-        return synthetic_X, synthetic_y
+        return X_resampled, y_resampled
 
-if __name__ == "__main__":
-    directorio_actual = os.getcwd()
-    ruta_archivo = os.path.join(directorio_actual,"datasets/tratamiento.csv")
-    df = pd.read_csv(ruta_archivo)
+# if __name__ == "__main__":
+#     data = {
+#         'feature1': ['A', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C'],
+#         'feature2': ['X', 'Y', 'X', 'Z', 'Y', 'X', 'Z', 'Y', 'X', 'Z'],
+#         'feature3': ['M', 'N', 'M', 'O', 'N', 'M', 'O', 'N', 'M', 'O'],
+#         'feature4': ['P', 'Q', 'P', 'R', 'Q', 'P', 'R', 'Q', 'P', 'R'],
+#         'feature5': ['S', 'T', 'S', 'U', 'T', 'S', 'U', 'T', 'S', 'U'],
+#         'feature6': ['V', 'W', 'V', 'X', 'W', 'V', 'X', 'W', 'V', 'X'],
+#         'target':  [0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+#     }
 
-    balance = df['AdministrarTratamiento'].value_counts() 
-    print(balance)
+#     df = pd.DataFrame(data)
 
-    X = df.drop(['AdministrarTratamiento', 'Paciente'], axis=1)
-    y = df[['AdministrarTratamiento']]
+#     X = df.drop('target', axis=1).values
+#     y = df['target'].values
 
-    balanceo = Balanceo()
+#     balance = df['TargetClass'].value_counts() 
+#     print(balance)
 
-    x_val, y_val = balanceo.random_undersample(X,y)
+#     X = df.drop(['TargetClass', 'SpType'], axis=1)
+#     y = df[['TargetClass']]
 
-    print(y_val.value_counts())
+#     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+#     classifier = RandomForestClassifier(algoritmo = "C4.5", tecnica_balanceo="TomekLinks")
+#     classifier.fit(X_train, y_train)
+
+#     # Evaluamos el modelo
+#     y_pred = classifier.predict(X_test)
+
+#     accuracy = accuracy_score(y_test, y_pred)
+#     precision = recall_score(y_test, y_pred, average= 'weighted')
+#     recall = f1_score(y_test, y_pred, average= 'weighted')
+#     matriz = confusion_matrix(y_test, y_pred)
+#     print(f'Accuracy: {accuracy}')
+#     print(f'Precision: {precision}')
+#     print(f'Recall: {recall}')
+#     print(f'{matriz}')
 
