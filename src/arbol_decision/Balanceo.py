@@ -6,11 +6,22 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
 class Balanceo:
     @staticmethod
-    def calcular_distancia(x1, x2):
-        return np.linalg.norm(x1 - x2)
-
-    @staticmethod
     def random_undersample(X: np.ndarray, y: np.ndarray) -> (np.ndarray , np.ndarray):
+        """
+        Elimina filas de datos de manera aleatoria para que la cantidad de instancias de cada clase sea la misma.
+
+        Parámetros
+        ----------
+        X: np.ndarray
+            Conjunto de entrada
+        y: np.ndarray
+            Etiquetas correspondientes a X
+
+        Returns
+        -------
+        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target reducidos y balanceados.
+
+        """
         clases_target = np.unique(y)
         indices = []
         state = np.random.RandomState(42)
@@ -33,6 +44,21 @@ class Balanceo:
         return X_filtrado, y_filtrado
 
     def random_oversample(X: np.ndarray, y: np.ndarray) -> (np.ndarray , np.ndarray):
+        """
+        Repite filas de datos de manera aleatoria para que la cantidad de instancias de cada clase sea la misma.
+
+        Parámetros
+        ----------
+        X: np.ndarray
+            Conjunto de entrada
+        y: np.ndarray
+            Etiquetas correspondientes a X
+
+        Returns
+        -------
+        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target aumentados y balanceados.
+
+        """
         clases_target = np.unique(y)
         indices = []
         state = np.random.RandomState(42)
@@ -79,36 +105,64 @@ class Balanceo:
     #     return X_filtrado, y_filtrado
     
     def tomek_links(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        Elimina filas de datos buscando dos vecinos cercanos cuyas clases sean distintas.
+
+        Parámetros
+        ----------
+        X: np.ndarray
+            Conjunto de entrada
+        y: np.ndarray
+            Etiquetas correspondientes a X
+
+        Returns
+        -------
+        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target reducidos y balanceados.
+
+        """
         n_samples = X.shape[0]
 
         encoder = OneHotEncoder()
         X_encoded = encoder.fit_transform(X)
 
-        # Step 1: Find nearest neighbors
         vecinos = NearestNeighbors(n_neighbors=2).fit(X_encoded)
         indices = vecinos.kneighbors(X_encoded, return_distance=False)
 
-        # Step 2: Identify Tomek links
-        indices_to_keep = set()
+        indices_eliminar = set()
 
         for i in range(n_samples):
-            for j in range(1, 2):  # j starts from 1 because index 0 is the sample itself
-                neighbor_index = indices[i][j]
+            for j in range(1, 2): 
+                indices_vecinos = indices[i][j]
                 
-                if y[i] != y[neighbor_index]:
-                    if indices[neighbor_index][1] == i:  # Check if i is the nearest neighbor of neighbor_index
-                        indices_to_keep.add(i)
-                        indices_to_keep.add(neighbor_index)
+                if y[i] != y[indices_vecinos]:
+                    if indices[indices_vecinos][1] == i: 
+                        indices_eliminar.add(i)
+                        indices_eliminar.add(indices_vecinos)
 
-        # Step 3: Filter X and y based on identified indices
-        indices_to_keep = list(indices_to_keep)
-        X_filtered = np.delete(X, indices_to_keep, axis=0)
-        y_filtered = np.delete(y, indices_to_keep)
+        indices_eliminar = list(indices_eliminar)
+        X_filtrado = np.delete(X, indices_eliminar, axis=0)
+        y_filtrado = np.delete(y, indices_eliminar)
 
-        return X_filtered, y_filtered
+        return X_filtrado, y_filtrado
 
     @staticmethod
-    def nearmiss(X, y):
+    def nearmiss(X: np.ndarray, y:np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        Metodo de undersamppling que elimina filas de datos buscando instancias de la clase mayoritaria que esten cerca, en cuanto a similitud de features, a las de la clase minoritaria.
+        Esta implementacion se usa junto al algoritmo C4.5
+
+        Parámetros
+        ----------
+        X: np.ndarray
+            Conjunto de datos de entrada.
+        y: np.ndarray
+            Etiquetas correspondientes a X.
+
+        Returns
+        -------
+        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target reducidos y balanceados.
+
+        """
         instancia_cercana = defaultdict(list)
         clases = np.unique(y)
         
@@ -123,7 +177,7 @@ class Balanceo:
                         indices_clase = np.where(y == label)[0]
                         instancia_clase = X[indices_clase]
                         for sample in instancia_clase:
-                            distancia = Balanceo.calcular_distancia(instancia, sample)
+                            distancia = np.linalg.norm(instancia, sample)
                             distancias.append((distancia, label))
                 
                 distancias.sort()
@@ -132,16 +186,32 @@ class Balanceo:
                 for distancia, nearest_class in vecino_mas_cercano:
                     instancia_cercana[clase].append((instancia, nearest_class))
         
-        undersampled_X = []
-        undersampled_y = []
+        X_reducido = []
+        y_reducido = []
         for clase, samples in instancia_cercana.items():
             for sample, nearest_class in samples:
-                undersampled_X.append(sample)
-                undersampled_y.append(clase)
+                X_reducido.append(sample)
+                y_reducido.append(clase)
         
-        return np.array(undersampled_X), np.array(undersampled_y)
+        return np.array(X_reducido), np.array(y_reducido)
 
     def nearmiss_categorico(X, y):
+        """
+        Metodo de undersamppling que elimina filas de datos buscando instancias de la clase mayoritaria que esten cerca, en cuanto a similitud de features, a las de la clase minoritaria.
+        Esta implementacion se usa junto al algoritmo C4.5
+
+        Parámetros
+        ----------
+        X: np.ndarray
+            Conjunto de datos de entrada.
+        y: np.ndarray
+            Etiquetas correspondientes a X.
+
+        Returns
+        -------
+        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target reducidos y balanceados.
+
+        """
         instancia_cercana = defaultdict(list)
         clases = np.unique(y)
         
@@ -158,15 +228,15 @@ class Balanceo:
             if clase != nearest_class:
                 instancia_cercana[clase].append((X[i], nearest_class))
         
-        undersampled_X = []
-        undersampled_y = []
+        X_reducido = []
+        y_reducido = []
         
         for clase, samples in instancia_cercana.items():
             for sample, nearest_class in samples:
-                undersampled_X.append(sample)
-                undersampled_y.append(clase)
+                X_reducido.append(sample)
+                y_reducido.append(clase)
         
-        return np.array(undersampled_X), np.array(undersampled_y)
+        return np.array(X_reducido), np.array(y_reducido)
 
     
     

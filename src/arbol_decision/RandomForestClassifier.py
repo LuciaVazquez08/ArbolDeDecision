@@ -260,16 +260,58 @@ class RandomForestClassifier:
         return preds_finales
     
     def get_params(self):
+        """
+        Permite obtener los parametros del bosque.
+
+        Parámetros
+        ----------
+        self : RandomForestClassifier
+
+        Returns
+        -------
+        dict() : nombre de los parametros del RandomForestClassifier y sus valores
+        """
         return self.__dict__
 
-    def set_params(self, **params):
+    def set_params(self, **params: list[str]) -> None:
+        """
+        Permite setear los parametros del bosque.
+
+        Parámetros
+        ----------
+        self : DecisionTreeClassifier
+        params: list[str]
+            Nombres de los parametros a setear
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError : Si uno de los nombres de parametro pasados no corresponde a un parametro de RandomForestClassifier
+        """
         for key, value in params.items():
                 if hasattr(self,key):
                     setattr(self,key,value)
                 else:
                     raise ValueError(f"{key} no es un atributo valido")
 
-    def predict_proba(self, X: DataFrame):
+    def predict_proba(self, X: DataFrame) -> np.ndarray:
+        """
+        Calcula las probabilidades de predicción para cada clase utilizando un ensamble de árboles.
+
+        Parámetros
+        ----------
+        X : DataFrame
+            Datos de entrada para los cuales se desea calcular las probabilidades de predicción.
+
+        Returns
+        -------
+        np.ndarray
+            Matriz de probabilidades de predicción. Cada fila corresponde a una muestra en X y
+            cada columna corresponde a una clase.
+        """
         n_samples = X.shape[0]
         cantidades = {c: np.zeros(n_samples) for c in np.unique(self.arboles[0].predict(X))}
 
@@ -284,7 +326,26 @@ class RandomForestClassifier:
         
         return prob
 
-    def score(self, X,y):
+    def score(self, X: DataFrame , y : DataFrame) -> float:
+        """
+        Permite evaluar la precision de la prediccion del bosque.
+
+        Parámetros
+        ----------
+        self : RandomForestClassifier
+        X : DataFrame
+            Conjunto de datos de entrada
+        y : DataFrame
+            Etiquetas correspondientes a X
+
+        Returns
+        -------
+        float : precision de la prediccion sobre instancias 
+
+        Raises
+        ------
+        ValueError : Si el tamaño de las instancias presentadas y de los target no coinciden
+        """
         X_array = np.array(X)
         y_array = np.array(y)
         if len(X_array) == len(y_array):
