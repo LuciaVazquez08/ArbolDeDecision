@@ -1,4 +1,4 @@
-#from arbol_decision.Balanceo import Balanceo
+from arbol_decision.Balanceo import Balanceo
 from arbol_decision.ArbolID3 import ArbolID3
 from arbol_decision.ArbolC4_5 import ArbolC4_5
 from arbol_decision.DecisionTreeClassifier import DecisionTreeClassifier
@@ -51,7 +51,8 @@ class RandomForestClassifier:
         - "none" (selecciona todos los atributos).
 
     tecnica balanceo : str, default=None
-        .......................
+        El método para balancear el dataset en caso de estar desbalanceado puede ser:
+        - RandomUnder, RandomOver, TomekLinks, SMOTE y Nearmiss
 
     Atributos
     ---------
@@ -199,7 +200,7 @@ class RandomForestClassifier:
             if self.algoritmo == ArbolC4_5:
                 X_array = ArbolC4_5.imputar_valores_faltantes(X_array, self.top_atributos, self.umbral)
 
-            '''if self.tecnica_balanceo:
+            if self.tecnica_balanceo:
                 if self.tecnica_balanceo == "RandomUnder":
                     X_array, y_array = Balanceo.random_undersample(X_array,y_array)
                 elif self.tecnica_balanceo == "RandomOver":
@@ -214,7 +215,7 @@ class RandomForestClassifier:
                     else:
                         raise ValueError("Los algoritmos validos son ArbolID3 y ArbolC4_5")
                 else:
-                    raise ValueError("las opciones validas son RandomUnder, RandomOver, TomekLinks, SMOTE y Nearmiss")'''
+                    raise ValueError("Las opciones válidas para balanceo son RandomUnder, RandomOver, TomekLinks, SMOTE y Nearmiss")
                 
             if self.bootstrap:
                 muestras = RandomForestClassifier.bootstraping(X_array, y_array, self.n_estimadores)
@@ -259,99 +260,4 @@ class RandomForestClassifier:
         
         return preds_finales
     
-    def get_params(self):
-        """
-        Permite obtener los parametros del bosque.
-
-        Parámetros
-        ----------
-        self : RandomForestClassifier
-
-        Returns
-        -------
-        dict() : nombre de los parametros del RandomForestClassifier y sus valores
-        """
-        return self.__dict__
-
-    def set_params(self, **params: list[str]) -> None:
-        """
-        Permite setear los parametros del bosque.
-
-        Parámetros
-        ----------
-        self : DecisionTreeClassifier
-        params: list[str]
-            Nombres de los parametros a setear
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError : Si uno de los nombres de parametro pasados no corresponde a un parametro de RandomForestClassifier
-        """
-        for key, value in params.items():
-                if hasattr(self,key):
-                    setattr(self,key,value)
-                else:
-                    raise ValueError(f"{key} no es un atributo valido")
-
-    def predict_proba(self, X: DataFrame) -> np.ndarray:
-        """
-        Calcula las probabilidades de predicción para cada clase utilizando un ensamble de árboles.
-
-        Parámetros
-        ----------
-        X : DataFrame
-            Datos de entrada para los cuales se desea calcular las probabilidades de predicción.
-
-        Returns
-        -------
-        np.ndarray
-            Matriz de probabilidades de predicción. Cada fila corresponde a una muestra en X y
-            cada columna corresponde a una clase.
-        """
-        n_samples = X.shape[0]
-        cantidades = {c: np.zeros(n_samples) for c in np.unique(self.arboles[0].predict(X))}
-
-        for arbol in self.arboles:
-            pred = arbol.predict(X)
-            for i, pred in enumerate(pred):
-                cantidades[pred][i] += 1
-
-        prob = np.zeros((n_samples, len(cantidades)))
-        for i, cls in enumerate(cantidades):
-            prob[:, i] = cantidades[cls] / len(self.arboles)
-        
-        return prob
-
-    def score(self, X: DataFrame , y : DataFrame) -> float:
-        """
-        Permite evaluar la precision de la prediccion del bosque.
-
-        Parámetros
-        ----------
-        self : RandomForestClassifier
-        X : DataFrame
-            Conjunto de datos de entrada
-        y : DataFrame
-            Etiquetas correspondientes a X
-
-        Returns
-        -------
-        float : precision de la prediccion sobre instancias 
-
-        Raises
-        ------
-        ValueError : Si el tamaño de las instancias presentadas y de los target no coinciden
-        """
-        X_array = np.array(X)
-        y_array = np.array(y)
-        if len(X_array) == len(y_array):
-            pred = self.predict(X_array)
-            acc = sum(p == t for p,t in zip(pred,y_array))
-            accuracy = acc / len(y_array)
-            return accuracy
-        else:
-            raise ValueError("Debe haber la cantidad de instancias en los features que en el target")
+    

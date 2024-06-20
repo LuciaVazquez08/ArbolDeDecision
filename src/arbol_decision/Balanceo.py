@@ -1,44 +1,58 @@
+from typing import Tuple
 import numpy as np
 import os
 import pandas as pd
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
+
 class Balanceo:
+
     @staticmethod
     def calcular_distancia(x1, x2):
         """
-        Calcula la distiancia 
+        Calcula la distancia Euclidiana entre dos puntos.
 
         Parámetros
         ----------
-        X: DataFrame
-            Las muestras de entrada para las cuales se realizarán las predicciones.
+        x1 : array-like
+            Primer punto.
+        x2 : array-like
+            Segundo punto.
 
-        Returns
+        Retorno
         -------
-        list[T] : Devuelve una lista con las predicciones para cada instancia de X, combinando las predicciones de cada árbol entrenado.
-
+        float
+            Distancia Euclidiana entre x1 y x2.
         """
         return np.linalg.norm(x1 - x2)
 
     @staticmethod
-    def random_undersample(X: np.ndarray, y: np.ndarray) -> (np.ndarray , np.ndarray):
+    def random_undersample(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Elimina filas de datos de manera aleatoria para que la cantidad de instancias de cada clase sea la misma.
+        Realiza submuestreo aleatorio para balancear las clases del conjunto de datos.
 
         Parámetros
         ----------
-        X: np.ndarray
-            Conjunto de entrada
-        y: np.ndarray
-            Etiquetas correspondientes a X
+        X : np.ndarray
+            Las muestras del conjunto de entrenamiento.
+        y : np.ndarray
+            Los valores del target con valores integers o strings.
 
-        Returns
+        Retorno
         -------
-        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target reducidos y balanceados.
+        tuple
+            Conjuntos de datos balanceados (X_filtrado, y_filtrado).
 
+        Raises
+        ------
+        ValueError
+            Si el número de muestras en X y y no es el mismo.
         """
+
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("El número de muestras en X y y no es el mismo.")
+        
         clases_target = np.unique(y)
         indices = []
         state = np.random.RandomState(42)
@@ -60,22 +74,31 @@ class Balanceo:
         
         return X_filtrado, y_filtrado
 
-    def random_oversample(X: np.ndarray, y: np.ndarray) -> (np.ndarray , np.ndarray):
+    def random_oversample(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Repite filas de datos de manera aleatoria para que la cantidad de instancias de cada clase sea la misma.
+        Realiza sobremuestreo aleatorio para balancear las clases del conjunto de datos.
 
         Parámetros
         ----------
-        X: np.ndarray
-            Conjunto de entrada
-        y: np.ndarray
-            Etiquetas correspondientes a X
+        X : np.ndarray
+            Las muestras del conjunto de entrenamiento.
+        y : np.ndarray
+            Los valores del target con valores integers o strings.
 
-        Returns
+        Retorno
         -------
-        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target aumentados y balanceados.
+        tuple
+            Conjuntos de datos balanceados (X_filtrado, y_filtrado).
 
+        Raises
+        ------
+        ValueError
+            Si el número de muestras en X y y no es el mismo.
         """
+
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("El número de muestras en X y y no es el mismo.")
+        
         clases_target = np.unique(y)
         indices = []
         state = np.random.RandomState(42)
@@ -97,22 +120,31 @@ class Balanceo:
         
         return X_filtrado, y_filtrado
     
-    def tomek_links(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
+    def tomek_links(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Elimina filas de datos buscando dos vecinos cercanos cuyas clases sean distintas.
+        Aplica la técnica de Tomek Links para eliminar ejemplos ruidosos del conjunto de datos.
 
         Parámetros
         ----------
-        X: np.ndarray
-            Conjunto de entrada
-        y: np.ndarray
-            Etiquetas correspondientes a X
+        X : np.ndarray
+            Las muestras del conjunto de entrenamiento.
+        y : np.ndarray
+            Los valores del target con valores integers o strings.
 
-        Returns
+        Retorno
         -------
-        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target reducidos y balanceados.
+        tuple
+            Conjuntos de datos sin ejemplos ruidosos (X_filtrado, y_filtrado).
 
+        Raises
+        ------
+        ValueError
+            Si el número de muestras en X y y no es el mismo.
         """
+
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("El número de muestras en X y y no es el mismo.")
+        
         n_samples = X.shape[0]
 
         encoder = OneHotEncoder()
@@ -139,23 +171,31 @@ class Balanceo:
         return X_filtrado, y_filtrado
 
     @staticmethod
-    def nearmiss(X: np.ndarray, y:np.ndarray) -> (np.ndarray, np.ndarray):
+    def nearmiss(X: np.ndarray, y:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Metodo de undersamppling que elimina filas de datos buscando instancias de la clase mayoritaria que esten cerca, en cuanto a similitud de features, a las de la clase minoritaria.
-        Esta implementacion se usa junto al algoritmo C4.5
+        Aplica la técnica de NearMiss para submuestrear las clases mayoritarias.
 
         Parámetros
         ----------
-        X: np.ndarray
-            Conjunto de datos de entrada.
-        y: np.ndarray
-            Etiquetas correspondientes a X.
+        X : np.ndarray
+            Las muestras del conjunto de entrenamiento.
+        y : np.ndarray
+            Los valores del target con valores integers o strings.
 
-        Returns
+        Retorno
         -------
-        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target reducidos y balanceados.
+        tuple
+            Conjuntos de datos balanceados (X_reducido, y_reducido).
 
+        Raises
+        ------
+        ValueError
+            Si el número de muestras en X y y no es el mismo.
         """
+
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("El número de muestras en X y y no es el mismo.")
+        
         instancia_cercana = defaultdict(list)
         clases = np.unique(y)
         
@@ -188,23 +228,30 @@ class Balanceo:
         
         return np.array(X_reducido), np.array(y_reducido)
 
-    def nearmiss_categorico(X, y):
+    def nearmiss_categorico(X, y) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Metodo de undersamppling que elimina filas de datos buscando instancias de la clase mayoritaria que esten cerca, en cuanto a similitud de features, a las de la clase minoritaria.
-        Esta implementacion se usa junto al algoritmo C4.5
+        Aplica la técnica de NearMiss para datos categóricos.
 
         Parámetros
         ----------
-        X: np.ndarray
-            Conjunto de datos de entrada.
-        y: np.ndarray
-            Etiquetas correspondientes a X.
+        X : np.ndarray
+            Las muestras del conjunto de entrenamiento.
+        y : np.ndarray
+            Los valores del target con valores integers o strings.
 
-        Returns
+        Retorno
         -------
-        (np.ndarray , np.ndarray) : Devuelve un  par ordenado con las instanicas y sus target reducidos y balanceados.
+        tuple
+            Conjuntos de datos balanceados (X_reducido, y_reducido).
 
+        Raises
+        ------
+        ValueError
+            Si el número de muestras en X y y no es el mismo.
         """
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("El número de muestras en X y y no es el mismo.")
+        
         instancia_cercana = defaultdict(list)
         clases = np.unique(y)
         

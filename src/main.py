@@ -225,7 +225,7 @@ def c45_DecisionTree():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Creamos y entrenamos el clasificador de árbol de decisión
-    classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5)
+    classifier = DecisionTreeClassifier(algoritmo=ArbolC4_5, profundidad_max=7, ganancia_minima=0.2)
     classifier.fit(X_train, y_train)
     print(classifier._arbol)
 

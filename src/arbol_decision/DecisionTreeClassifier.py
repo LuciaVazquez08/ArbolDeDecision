@@ -146,74 +146,7 @@ class DecisionTreeClassifier:
           
         predicciones = [_predict_instancia(instancia, self._arbol) for instancia in X_array]
         return predicciones
-    
-    def get_params(self):
-        """
-        Permite obtener los parametros del arbol.
 
-        Parámetros
-        ----------
-        self : DecisionTreeClassifier
-
-        Returns
-        -------
-        dict() : nombre de los parametros del DecisionTreeClassifier y sus valores
-        """
-        return self.__dict__
-    
-    def set_params(self, **params : list[str]) -> None:
-        """
-        Permite setear los parametros del arbol.
-
-        Parámetros
-        ----------
-        self : DecisionTreeClassifier
-        params: list[str]
-            Nombres de los parametros a setear
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError : Si uno de los nombres de parametro pasados no corresponde a un parametro de DecisionTreeClassifier
-        """
-        for key, value in params.items():
-            if hasattr(self,key):
-                setattr(self,key,value)
-            else:
-                raise ValueError(f"{key} no es un atributo valido")
-            
-    def score(self, X: pd.DataFrame, y: pd.DataFrame) -> float:
-        """
-        Permite evaluar la precision de la prediccion del arbol.
-
-        Parámetros
-        ----------
-        self : DecisionTreeClassifier
-        X : DataFrame
-            Conjunto de datos de entrada
-        y : DataFrame
-            Etiquetas correspondientes a X
-
-        Returns
-        -------
-        float : precision de la prediccion sobre instancias 
-
-        Raises
-        ------
-        ValueError : Si el tamaño de las instancias presentadas y de los target no coinciden
-        """
-        X_array = np.asarray(X)
-        y_array = np.asarray(y)
-        if len(X_array) == len(y_array):
-            pred = self.predict(X_array)
-            acc = sum(p == t for p,t in zip(pred,y_array))
-            accuracy = acc / len(y_array)
-            return accuracy
-        else:
-            raise ValueError("Debe haber la cantidad de instancias en los features que en el target")
     
 
 
