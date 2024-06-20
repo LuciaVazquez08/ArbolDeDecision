@@ -1,0 +1,15 @@
+﻿Paciente,PresionArterial,UreaSangre,Gota,Hipotiroidismo,AdministrarTratamiento
+1,alta,alta,si,no,no
+2,alta,alta,si,si,no
+3,normal,alta,si,no,si
+4,baja,normal,si,no,si
+5,baja,baja,no,no,si
+6,baja,baja,no,si,no
+7,normal,baja,no,si,si
+8,alta,normal,si,no,no
+9,alta,baja,no,no,si
+10,baja,normal,no,no,si
+11,alta,normal,no,si,si
+12,normal,normal,si,si,si
+13,normal,alta,no,no,si
+14,baja,normal,si,si,no

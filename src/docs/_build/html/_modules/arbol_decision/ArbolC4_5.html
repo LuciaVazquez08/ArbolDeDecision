@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>arbol_decision.ArbolC4_5 &mdash; documentación de Documentación RandomForest - 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=36c4ab74"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Documentación RandomForest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Documentación RandomForest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">arbol_decision.ArbolC4_5</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para arbol_decision.ArbolC4_5</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">arbol_decision.Ganancia</span> <span class="kn">import</span> <span class="n">Ganancia</span>
+<span class="kn">from</span> <span class="nn">arbol_decision.Arbol</span> <span class="kn">import</span> <span class="n">Arbol</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ArbolC4_5">
+<a class="viewcode-back" href="../../arbol_decision.html#arbol_decision.ArbolC4_5.ArbolC4_5">[documentos]</a>
+<span class="k">class</span> <span class="nc">ArbolC4_5</span><span class="p">(</span><span class="n">Arbol</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementación del algoritmo de construcción C4.5.</span>
+
+<span class="sd">    Parámetros</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dato : T </span>
+<span class="sd">        El dato almacenado en el nodo del árbol.</span>
+<span class="sd">    </span>
+<span class="sd">    label : T, default=None</span>
+<span class="sd">        Es la clase mayoritaria del nodo.</span>
+
+<span class="sd">    atributo : str, default=None</span>
+<span class="sd">        El atributo utilizado para dividir el conjunto de datos en el nodo actual.</span>
+
+<span class="sd">    es_hoja : bool, default=False</span>
+<span class="sd">        Indica si el nodo es una hoja o no.</span>
+<span class="sd">    </span>
+<span class="sd">    Atributos</span>
+<span class="sd">    ---------</span>
+<span class="sd">    _hijos : dict</span>
+<span class="sd">        Diccionario que almacena los hijos (subárboles) de cada nodo.</span>
+
+<span class="sd">    _num_samples : int </span>
+<span class="sd">        La cantidad de muestras almacenadas en cada nodo.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dato</span> <span class="o">=</span> <span class="n">T</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="n">T</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dato</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_es_hoja</span> <span class="o">=</span> <span class="n">es_hoja</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hijos</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atributo</span> <span class="o">=</span> <span class="n">atributo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nivel</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">espacio_indentado</span> <span class="o">=</span> <span class="s2">&quot;    &quot;</span> <span class="o">*</span> <span class="n">nivel</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_es_hoja</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">espacio_indentado</span><span class="si">}</span><span class="s2">[Hoja: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">, Samples: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nombre_atributo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atributo</span>
+            <span class="n">resultado</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">espacio_indentado</span><span class="si">}</span><span class="s2">[Atributo: </span><span class="si">{</span><span class="n">nombre_atributo</span><span class="si">}</span><span class="s2">, Samples: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">valor</span><span class="p">,</span> <span class="n">hijo</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hijos</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">resultado</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">espacio_indentado</span><span class="si">}</span><span class="s2">├── Valor: </span><span class="si">{</span><span class="n">valor</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="n">resultado</span> <span class="o">+=</span> <span class="n">hijo</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(</span><span class="n">nivel</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">resultado</span>
+        
+
+<div class="viewcode-block" id="ArbolC4_5.construir">
+<a class="viewcode-back" href="../../arbol_decision.html#arbol_decision.ArbolC4_5.ArbolC4_5.construir">[documentos]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">construir</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> 
+                  <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> 
+                  <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> 
+                  <span class="n">tipos_atributos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                  <span class="n">indice_atributos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+                  <span class="n">nombres_atributos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                  <span class="n">profundidad_max</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">minimas_obs_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">minimas_obs_h</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">ganancia_minima</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">profundidad_actual</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ArbolC4_5&quot;</span><span class="p">:</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construye un árbol de decisión utilizando el algoritmo C4.5.</span>
+
+<span class="sd">        Parámetros</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            Matriz de características del conjunto de datos de entrenamiento.</span>
+
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            Array con las etiquetas del conjunto de datos de entrenamiento.</span>
+
+<span class="sd">        tipos_atributos : list[str]</span>
+<span class="sd">            Lista que contiene los tipos de atributos en X, categóricos o continuos.</span>
+<span class="sd">        </span>
+<span class="sd">        indice_atributos : list[int]</span>
+<span class="sd">            Lista que contiene los índices de los atributos en X.</span>
+<span class="sd">        </span>
+<span class="sd">        nombres_atributos : list[str]</span>
+<span class="sd">            Lista que contiene los nombres de los atributos en X.</span>
+
+<span class="sd">        profundidad_max : int, default=None </span>
+<span class="sd">            La profundidad máxima que puede alcanzar el árbol.</span>
+
+<span class="sd">        minimas_obs_n : int, default=None </span>
+<span class="sd">            La cantidad mínima de observaciones requeridas para dividir un nodo interno. </span>
+
+<span class="sd">        minimas_obs_h : int, default=None </span>
+<span class="sd">            La cantidad mínima de observaciones requeridas presentes en una hoja. </span>
+
+<span class="sd">        ganancia_minima : float, default=None </span>
+<span class="sd">            La ganancia mínima al elegir el mejor atributo para dividir un nodo.</span>
+
+<span class="sd">        profundidad_actual : int, default=0</span>
+<span class="sd">            Profundidad actual del nodo en la construcción del árbol.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ArbolC4_5 : Devuelve un objeto ArbolC4_5 del árbol de decisión construido.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Criterio de parada: Nodo puro </span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">clase_mayoritaria</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">clase_mayoritaria</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">hoja</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">clase_mayoritaria</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">hoja</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">hoja</span>
+            
+        <span class="c1"># Criterio de parada: Maxima profundidad</span>
+        <span class="k">if</span> <span class="n">profundidad_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">profundidad_actual</span> <span class="o">&gt;=</span> <span class="n">profundidad_max</span><span class="p">:</span>
+            <span class="n">clase_mayoritaria</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">clase_mayoritaria</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">hoja</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">clase_mayoritaria</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">hoja</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">hoja</span>
+        
+        <span class="c1"># Criterio de parada: Mínimas observaciones por nodo</span>
+        <span class="k">if</span> <span class="n">minimas_obs_n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">minimas_obs_n</span><span class="p">:</span>
+            <span class="n">clase_mayoritaria</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">clase_mayoritaria</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">hoja</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">clase_mayoritaria</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">hoja</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">hoja</span>
+        
+        <span class="c1"># Criterio de parada: Sin atributos para dividir</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">indice_atributos</span><span class="p">:</span>  
+            <span class="n">clase_mayoritaria</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">clase_mayoritaria</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">hoja</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">clase_mayoritaria</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">hoja</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">hoja</span>
+
+        <span class="c1"># Seleccionar el mejor atributo</span>
+        <span class="n">mejor_atributo</span><span class="p">,</span> <span class="n">mejor_umbral</span><span class="p">,</span> <span class="n">mejor_ganancia</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">seleccionar_mejor_atributo</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">tipos_atributos</span><span class="p">,</span> <span class="n">indice_atributos</span><span class="p">)</span>
+
+        <span class="c1"># Criterio de parada: Ganancia mínima (verifica si la ganancia supera el umbral mínimo)</span>
+        <span class="k">if</span> <span class="n">ganancia_minima</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mejor_ganancia</span> <span class="o">&lt;</span> <span class="n">ganancia_minima</span><span class="p">):</span>
+            <span class="n">clase_mayoritaria</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">clase_mayoritaria</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">hoja</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">clase_mayoritaria</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">hoja</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">hoja</span>
+
+        <span class="c1"># Creamos el árbol con el mejor atributo</span>
+        <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="n">mejor_atributo</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="n">nombres_atributos</span><span class="p">[</span><span class="n">mejor_atributo</span><span class="p">])</span>
+        <span class="n">arbol</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Caso 1: El mejor atributo es continuo</span>
+        <span class="k">if</span> <span class="n">mejor_umbral</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  
+
+            <span class="n">atributos_restantes</span> <span class="o">=</span> <span class="n">indice_atributos</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">atributos_restantes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">mejor_atributo</span><span class="p">)</span>
+
+            <span class="n">indices_izq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">mejor_atributo</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">mejor_umbral</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">indices_der</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">mejor_atributo</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">mejor_umbral</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">sub_X_izq</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">indices_izq</span><span class="p">]</span>
+            <span class="n">sub_y_izq</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">indices_izq</span><span class="p">]</span>
+            <span class="n">sub_X_der</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">indices_der</span><span class="p">]</span>
+            <span class="n">sub_y_der</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">indices_der</span><span class="p">]</span>
+
+            <span class="c1"># Criterio de parada: Mínimas observaciones por hoja (no anda)</span>
+            <span class="k">if</span> <span class="n">minimas_obs_h</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minimas_obs_h</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_y_izq</span><span class="p">):</span> 
+                <span class="n">clase_mayoritaria</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">clase_mayoritaria</span><span class="p">(</span><span class="n">sub_y_izq</span><span class="p">)</span>
+                <span class="n">sub_arbol_izq</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">label</span><span class="o">=</span> <span class="n">clase_mayoritaria</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">sub_arbol_izq</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_y_izq</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">sub_arbol_izq</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sub_arbol_izq</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">construir</span><span class="p">(</span><span class="n">sub_X_izq</span><span class="p">,</span> <span class="n">sub_y_izq</span><span class="p">,</span> <span class="n">tipos_atributos</span><span class="p">,</span> <span class="n">atributos_restantes</span><span class="p">,</span> <span class="n">nombres_atributos</span><span class="p">,</span> <span class="n">profundidad_max</span><span class="p">,</span> <span class="n">minimas_obs_n</span><span class="p">,</span> <span class="n">minimas_obs_h</span><span class="p">,</span> <span class="n">ganancia_minima</span><span class="p">,</span> <span class="n">profundidad_actual</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+
+            <span class="c1"># Criterio de parada: Mínimas observaciones por hoja (no anda)</span>
+            <span class="k">if</span> <span class="n">minimas_obs_h</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minimas_obs_h</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_y_der</span><span class="p">):</span> 
+                <span class="n">clase_mayoritaria</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">clase_mayoritaria</span><span class="p">(</span><span class="n">sub_y_der</span><span class="p">)</span>
+                <span class="n">sub_arbol_der</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">label</span><span class="o">=</span> <span class="n">clase_mayoritaria</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">sub_arbol_der</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_y_der</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">sub_arbol_der</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sub_arbol_der</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">construir</span><span class="p">(</span><span class="n">sub_X_der</span><span class="p">,</span> <span class="n">sub_y_der</span><span class="p">,</span> <span class="n">tipos_atributos</span><span class="p">,</span> <span class="n">atributos_restantes</span><span class="p">,</span> <span class="n">nombres_atributos</span><span class="p">,</span> <span class="n">profundidad_max</span><span class="p">,</span> <span class="n">minimas_obs_n</span><span class="p">,</span> <span class="n">minimas_obs_h</span><span class="p">,</span> <span class="n">ganancia_minima</span><span class="p">,</span> <span class="n">profundidad_actual</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">arbol</span><span class="o">.</span><span class="n">_hijos</span><span class="p">[(</span><span class="s1">&#39;&lt;=&#39;</span><span class="p">,</span> <span class="n">mejor_umbral</span><span class="p">)]</span> <span class="o">=</span> <span class="n">sub_arbol_izq</span>
+            <span class="n">arbol</span><span class="o">.</span><span class="n">_hijos</span><span class="p">[(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="n">mejor_umbral</span><span class="p">)]</span> <span class="o">=</span> <span class="n">sub_arbol_der</span>
+
+        <span class="c1"># Caso 2: El mejor atributo es categórico</span>
+        <span class="k">else</span><span class="p">:</span>  
+            <span class="k">for</span> <span class="n">valor</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">mejor_atributo</span><span class="p">]):</span>
+                
+                <span class="n">atributos_restantes</span> <span class="o">=</span> <span class="n">indice_atributos</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">atributos_restantes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">mejor_atributo</span><span class="p">)</span>
+            
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">mejor_atributo</span><span class="p">]</span> <span class="o">==</span> <span class="n">valor</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">sub_X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+                <span class="n">sub_y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+                <span class="c1"># Criterio de parada: Mínimas observaciones por hoja</span>
+                <span class="k">if</span> <span class="n">minimas_obs_h</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minimas_obs_h</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_y</span><span class="p">):</span>
+                    <span class="n">clase_mayoritaria</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">clase_mayoritaria</span><span class="p">(</span><span class="n">sub_y</span><span class="p">)</span>
+                    <span class="n">subarbol</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">label</span><span class="o">=</span> <span class="n">clase_mayoritaria</span><span class="p">,</span> <span class="n">atributo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es_hoja</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">subarbol</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_y</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">subarbol</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">subarbol</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">construir</span><span class="p">(</span><span class="n">sub_X</span><span class="p">,</span> <span class="n">sub_y</span><span class="p">,</span> <span class="n">tipos_atributos</span><span class="p">,</span> <span class="n">atributos_restantes</span><span class="p">,</span> <span class="n">nombres_atributos</span><span class="p">,</span> <span class="n">profundidad_max</span><span class="p">,</span> <span class="n">minimas_obs_n</span><span class="p">,</span> <span class="n">minimas_obs_h</span><span class="p">,</span> <span class="n">ganancia_minima</span><span class="p">,</span> <span class="n">profundidad_actual</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    
+                <span class="n">arbol</span><span class="o">.</span><span class="n">_hijos</span><span class="p">[</span><span class="n">valor</span><span class="p">]</span> <span class="o">=</span> <span class="n">subarbol</span>
+        <span class="k">return</span> <span class="n">arbol</span></div>
+
+    
+
+<div class="viewcode-block" id="ArbolC4_5.seleccionar_mejor_atributo">
+<a class="viewcode-back" href="../../arbol_decision.html#arbol_decision.ArbolC4_5.ArbolC4_5.seleccionar_mejor_atributo">[documentos]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">seleccionar_mejor_atributo</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">tipos_atributos</span><span class="p">,</span> <span class="n">atributos</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Selecciona el mejor atributo para dividir el conjunto de datos basado en la ganancia de información.</span>
+
+<span class="sd">        Parámetros</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            Matriz de características del conjunto de datos de entrenamiento.</span>
+<span class="sd">            </span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            Array con las etiquetas del conjunto de datos de entrenamiento.</span>
+<span class="sd">            </span>
+<span class="sd">        tipos_atributos : list[str]</span>
+<span class="sd">            Lista que contiene los tipos de atributos en X, categóricos o continuos.</span>
+<span class="sd">            </span>
+<span class="sd">        atributos : list[int]</span>
+<span class="sd">            Lista de índices de los atributos a considerar para la selección.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mejor_atributo : int</span>
+<span class="sd">            El índice del mejor atributo para la división.</span>
+<span class="sd">            </span>
+<span class="sd">        mejor_umbral : float</span>
+<span class="sd">            El umbral óptimo para la división en caso de que el atributo sea continuo, </span>
+<span class="sd">            o None si el atributo es categórico.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mejor_ganancia</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">mejor_atributo</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">atributo</span> <span class="ow">in</span> <span class="n">atributos</span><span class="p">:</span>      
+            <span class="n">valores_atributo</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">atributo</span><span class="p">]</span>
+            <span class="n">tipo_atributo</span> <span class="o">=</span> <span class="n">tipos_atributos</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">tipo_atributo</span> <span class="o">==</span> <span class="s1">&#39;continuo&#39;</span><span class="p">:</span>
+                <span class="n">umbral</span><span class="p">,</span> <span class="n">ganancia</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="o">.</span><span class="n">obtener_umbral_y_gain_ratio</span><span class="p">(</span><span class="n">valores_atributo</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ganancia</span> <span class="o">=</span> <span class="n">Ganancia</span><span class="o">.</span><span class="n">ganancia_informacion_atributo</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">atributo</span><span class="p">)</span>
+                <span class="n">umbral</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">ganancia</span> <span class="o">&gt;</span> <span class="n">mejor_ganancia</span><span class="p">:</span>
+                <span class="n">mejor_ganancia</span> <span class="o">=</span> <span class="n">ganancia</span>
+                <span class="n">mejor_atributo</span> <span class="o">=</span> <span class="n">atributo</span>
+                <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="n">umbral</span>
+
+        <span class="k">return</span> <span class="n">mejor_atributo</span><span class="p">,</span> <span class="n">mejor_umbral</span><span class="p">,</span> <span class="n">mejor_ganancia</span></div>
+
+    
+<div class="viewcode-block" id="ArbolC4_5.imputar_valores_faltantes">
+<a class="viewcode-back" href="../../arbol_decision.html#arbol_decision.ArbolC4_5.ArbolC4_5.imputar_valores_faltantes">[documentos]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">imputar_valores_faltantes</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">umbral</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">           </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Imputa los valores faltantes en la matriz de características X.</span>
+
+<span class="sd">        Parámetros</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            Matriz de características del conjunto de datos.</span>
+
+<span class="sd">        top_n : int</span>
+<span class="sd">            Número de valores más frecuentes a considerar para calcular la proporción.</span>
+<span class="sd">            </span>
+<span class="sd">        umbral : float</span>
+<span class="sd">            Umbral de proporción para decidir si el atributo es categórico o continuo.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Matriz de características con los valores faltantes imputados.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">X_imputado</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">atributo</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">columna_atributo</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">atributo</span><span class="p">]</span>
+            <span class="n">valores_faltantes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">columna_atributo</span><span class="p">)</span>  
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">valores_faltantes</span><span class="p">):</span>
+                <span class="n">tipo_atributo</span> <span class="o">=</span> <span class="n">ArbolC4_5</span><span class="o">.</span><span class="n">determinar_tipo_atributo</span><span class="p">(</span><span class="n">columna_atributo</span><span class="p">[</span><span class="o">~</span><span class="n">valores_faltantes</span><span class="p">],</span> <span class="n">top_n</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">tipo_atributo</span> <span class="o">==</span> <span class="s2">&quot;categorico&quot;</span><span class="p">:</span>
+        
+                    <span class="n">valores_clase</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">columna_atributo</span><span class="p">[</span><span class="o">~</span><span class="n">valores_faltantes</span><span class="p">])</span>
+                    <span class="n">valor_mas_comun</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">valores_clase</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">valores_clase</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+                    <span class="n">X_imputado</span><span class="p">[</span><span class="n">valores_faltantes</span><span class="p">,</span> <span class="n">atributo</span><span class="p">]</span> <span class="o">=</span> <span class="n">valor_mas_comun</span>
+
+                <span class="k">elif</span> <span class="n">tipo_atributo</span> <span class="o">==</span> <span class="s2">&quot;continuo&quot;</span><span class="p">:</span>
+                
+                    <span class="n">media_atributo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">columna_atributo</span><span class="p">[</span><span class="o">~</span><span class="n">valores_faltantes</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+                    <span class="n">media_atributo</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">media_atributo</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>  
+                    <span class="n">X_imputado</span><span class="p">[</span><span class="n">valores_faltantes</span><span class="p">,</span> <span class="n">atributo</span><span class="p">]</span> <span class="o">=</span> <span class="n">media_atributo</span>
+
+        <span class="k">return</span> <span class="n">X_imputado</span></div>
+
+
+    
+<div class="viewcode-block" id="ArbolC4_5.determinar_tipo_atributo">
+<a class="viewcode-back" href="../../arbol_decision.html#arbol_decision.ArbolC4_5.ArbolC4_5.determinar_tipo_atributo">[documentos]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">determinar_tipo_atributo</span><span class="p">(</span><span class="n">atributo</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">umbral</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determina el tipo de un atributo (categórico o continuo) basado en la proporción </span>
+<span class="sd">        de sus valores más frecuentes.</span>
+
+<span class="sd">        Parámetros</span>
+<span class="sd">        ----------</span>
+<span class="sd">        atributo : np.ndarray</span>
+<span class="sd">            Array de valores del atributo a analizar (columna con todos los valores).</span>
+<span class="sd">            </span>
+<span class="sd">        top_n : int</span>
+<span class="sd">            Número de valores más frecuentes a considerar para calcular la proporción.</span>
+<span class="sd">            </span>
+<span class="sd">        umbral : float</span>
+<span class="sd">            Umbral de proporción para decidir si el atributo es categórico o continuo.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str : &#39;categorico&#39; si la proporción de los top_n valores es mayor o igual al umbral, </span>
+<span class="sd">              &#39;continuo&#39; en caso contrario.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">atributo</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+            <span class="n">atributo</span> <span class="o">=</span> <span class="n">atributo</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">atributo</span><span class="p">)]</span>
+
+        <span class="n">valores_unicos</span><span class="p">,</span> <span class="n">conteos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Si la proporción de los top_n valores es alta, se considera categórico</span>
+        <span class="n">top_n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">top_n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">conteos</span><span class="p">))</span>
+        <span class="n">indices_ordenados</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">conteos</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">top_conteos</span> <span class="o">=</span> <span class="n">conteos</span><span class="p">[</span><span class="n">indices_ordenados</span><span class="p">][:</span><span class="n">top_n</span><span class="p">]</span>
+        <span class="n">proporcion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">top_conteos</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">atributo</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">proporcion</span> <span class="o">&gt;=</span> <span class="n">umbral</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;categorico&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;continuo&#39;</span>    </div>
+
+
+<div class="viewcode-block" id="ArbolC4_5.obtener_umbral_y_gain_ratio">
+<a class="viewcode-back" href="../../arbol_decision.html#arbol_decision.ArbolC4_5.ArbolC4_5.obtener_umbral_y_gain_ratio">[documentos]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">obtener_umbral_y_gain_ratio</span><span class="p">(</span><span class="n">atributo_continuo</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calcula el umbral óptimo y el gain ratio para un atributo continuo.</span>
+
+<span class="sd">        Parámetros</span>
+<span class="sd">        ----------</span>
+<span class="sd">        atributo_continuo : np.ndarray</span>
+<span class="sd">            Array de valores del atributo continuo a analizar (columna con todos los valores).</span>
+<span class="sd">            </span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            Array con las etiquetas asociado al conjunto de datos de entrenamiento.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple : Un par (umbral_optimo, ganancia_maxima) donde:</span>
+<span class="sd">                - umbral_optimo : float</span>
+<span class="sd">                    El valor óptimo del umbral que maximiza el gain ratio.</span>
+<span class="sd">                - ganancia_maxima : float</span>
+<span class="sd">                    El valor máximo del gain ratio obtenido para el umbral óptimo.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ganancia_maxima</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">umbral_optimo</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="c1"># Ordena los valores únicos del atributo continuo</span>
+        <span class="n">valores_unicos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">atributo_continuo</span><span class="p">))</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">valores_unicos</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">umbral</span> <span class="o">=</span> <span class="p">(</span><span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+            
+            <span class="n">grupo_1_y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">atributo_continuo</span> <span class="o">&lt;=</span> <span class="n">umbral</span><span class="p">]</span>
+            <span class="n">grupo_2_y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">atributo_continuo</span> <span class="o">&gt;</span> <span class="n">umbral</span><span class="p">]</span>
+
+            <span class="n">n_izquierda</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grupo_1_y</span><span class="p">)</span>
+            <span class="n">n_derecha</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grupo_2_y</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">n_izquierda</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n_derecha</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            
+            <span class="c1"># Crea una matriz X para gain_ratio</span>
+            <span class="n">X_dividido</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_izquierda</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_derecha</span><span class="p">)))</span>
+            <span class="n">y_dividido</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">grupo_1_y</span><span class="p">,</span> <span class="n">grupo_2_y</span><span class="p">))</span>
+            
+            <span class="n">gain_ratio</span> <span class="o">=</span> <span class="n">Ganancia</span><span class="o">.</span><span class="n">gain_ratio</span><span class="p">(</span><span class="n">X_dividido</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">y_dividido</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">gain_ratio</span> <span class="o">&gt;</span> <span class="n">ganancia_maxima</span><span class="p">:</span>
+                <span class="n">ganancia_maxima</span> <span class="o">=</span> <span class="n">gain_ratio</span>
+                <span class="n">umbral_optimo</span> <span class="o">=</span> <span class="n">umbral</span>
+        
+        <span class="k">return</span> <span class="n">umbral_optimo</span><span class="p">,</span> <span class="n">ganancia_maxima</span></div>
+
+
+<div class="viewcode-block" id="ArbolC4_5.clase_mayoritaria">
+<a class="viewcode-back" href="../../arbol_decision.html#arbol_decision.ArbolC4_5.ArbolC4_5.clase_mayoritaria">[documentos]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">clase_mayoritaria</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtiene la clase mayoritaria en un conjunto de etiquetas y.</span>
+
+<span class="sd">        Parámetros</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            Array de etiquetas del cual se desea encontrar la clase mayoritaria.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int : Devuelve la clase que tiene la mayor frecuencia en el array de etiquetas.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">clases</span><span class="p">,</span> <span class="n">conteo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">clases</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">conteo</span><span class="p">)]</span></div>
+</div>
+
+
+
+
+    
+            
+
+    
+            
+
+
+    
+            
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Molena Ivana, Sosa Naiara, Strika Camila y Vázquez Lucía.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
