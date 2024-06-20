@@ -15,7 +15,7 @@ class RandomForestClassifier:
 
     Parámetros
     ----------
-    algoritmo : ArbolID3 | ArbolC4_5, default=ArbolID3
+    algoritmo : ArbolID3 | ArbolC4_5, default=ArbolC4_5
         El algoritmo elegido para realizar la construcción del árbol de decisión.
 
     profundidad_max : int, default=None 
@@ -61,7 +61,7 @@ class RandomForestClassifier:
 
     """
 
-    def __init__(self, algoritmo: ArbolID3| ArbolC4_5 = ArbolID3, 
+    def __init__(self, algoritmo: ArbolID3| ArbolC4_5 = ArbolC4_5, 
                  profundidad_max: int = None,
                  minimas_obs_n: int = None, 
                  minimas_obs_h: int = None, 
