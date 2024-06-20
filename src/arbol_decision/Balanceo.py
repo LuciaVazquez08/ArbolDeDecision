@@ -97,30 +97,6 @@ class Balanceo:
         
         return X_filtrado, y_filtrado
     
-    # @staticmethod
-    # def tomek_links(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
-    #     n_samples = X.shape[0]
-
-    #     encoder = OneHotEncoder()
-    #     X_encoded = encoder.fit_transform(X)
-
-    #     vecinos = NearestNeighbors(n_neighbors=2).fit(X_encoded)
-    #     indices = vecinos.kneighbors(X_encoded, return_distance=False)
-
-    #     indices = set()
-        
-    #     for i in range(n_samples):
-    #         for j in range(1, 2):  
-    #             if y[i] != y[indices[i][j]]:  
-    #                 if indices[indices[i][j]][1] == i: 
-    #                     indices.add(i)
-    #                     indices.add(indices[i][j])
-
-    #     X_filtrado = np.delete(X, list(indices), axis=0)
-    #     y_filtrado = np.delete(y, list(indices))
-        
-    #     return X_filtrado, y_filtrado
-    
     def tomek_links(X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
         """
         Elimina filas de datos buscando dos vecinos cercanos cuyas clases sean distintas.
